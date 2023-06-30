@@ -40,6 +40,8 @@ The name of the manifest and smartcontract folder/path is configurable in the
 2. Make sure your smart contracts are in the directory you specified in `config.json`,
    or path in the manifest
 3. Run the deployer: `./deployer` (may require `chmod +x deployer` first)
+4. Use the data - Private Key Pem and Activeledger Identity - found in
+   `setup-output.json` in your code
 
 ## Config
 
