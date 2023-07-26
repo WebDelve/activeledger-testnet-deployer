@@ -9,21 +9,22 @@ import (
 	"dynamicledger.com/testnet-deployer/contracts"
 	"dynamicledger.com/testnet-deployer/files"
 	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/structs"
 
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
 type Bootstrapper struct {
-	config       *helper.Config
-	setup        *helper.SetupData
-	contractData []files.ContractStore
+	config       *structs.Config
+	setup        *structs.SetupData
+	contractData []structs.ContractStore
 }
 
-func GetBootstrapper(config *helper.Config, setupData *helper.SetupData) Bootstrapper {
+func GetBootstrapper(config *structs.Config, setupData *structs.SetupData) Bootstrapper {
 	return Bootstrapper{
 		config,
 		setupData,
-		[]files.ContractStore{},
+		[]structs.ContractStore{},
 	}
 }
 

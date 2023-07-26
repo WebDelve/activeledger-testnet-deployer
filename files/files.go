@@ -7,30 +7,11 @@ import (
 	"os"
 
 	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/structs"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
-type SetupStore struct {
-	Identity     string          `json:"identity"`
-	Namespace    string          `json:"namespace"`
-	KeyData      KeyStore        `json:"keyData"`
-	ContractData []ContractStore `json:"contractData"`
-}
-
-type KeyStore struct {
-	PublicPem   string `json:"publicPem"`
-	PublicHash  string `json:"publicHash"`
-	PrivatePem  string `json:"privatePem"`
-	PrivateHash string `json:"privateHash"`
-}
-
-type ContractStore struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
-	Hash string `json:"hash"`
-}
-
-func SaveSetupData(data *helper.SetupData, contractData *[]ContractStore, path string) {
+func SaveSetupData(data *structs.SetupData, contractData *[]structs.ContractStore, path string) {
 	prvKey := data.KeyHandler.GetPrivatePEM()
 	pubKey := data.KeyHandler.GetPublicPEM()
 
@@ -46,14 +27,14 @@ func SaveSetupData(data *helper.SetupData, contractData *[]ContractStore, path s
 	prvHash := fmt.Sprintf("%x", prvHashBytes)
 	pubHash := fmt.Sprintf("%x", pubHashBytes)
 
-	keyData := KeyStore{
+	keyData := structs.KeyStore{
 		PrivatePem:  prvKey,
 		PublicPem:   pubKey,
 		PrivateHash: prvHash,
 		PublicHash:  pubHash,
 	}
 
-	toStore := SetupStore{
+	toStore := structs.SetupStore{
 		KeyData:      keyData,
 		ContractData: *contractData,
 		Identity:     string(data.Identity),
@@ -69,10 +50,10 @@ func SaveSetupData(data *helper.SetupData, contractData *[]ContractStore, path s
 
 }
 
-func ReadSetupData(config *helper.Config) helper.SetupData {
+func ReadSetupData(config *structs.Config) structs.SetupData {
 	bSetup := ReadFile(config.SetupDataSaveFile)
 
-	var setupStore SetupStore
+	var setupStore structs.SetupStore
 	if err := json.Unmarshal(bSetup, &setupStore); err != nil {
 		helper.HandleError(err, "Error unmarshalling setup data")
 	}
@@ -88,12 +69,13 @@ func ReadSetupData(config *helper.Config) helper.SetupData {
 		Port:     "5260",
 	}
 
-	setup := helper.SetupData{
+	setup := structs.SetupData{
 		Folder:     config.TestnetFolder,
 		Identity:   alsdk.StreamID(setupStore.Identity),
 		Namespace:  setupStore.Namespace,
 		KeyHandler: keyHan,
 		Conn:       connection,
+		Contracts:  setupStore.ContractData,
 	}
 
 	return setup

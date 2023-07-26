@@ -2,16 +2,17 @@ package contracts
 
 import (
 	"dynamicledger.com/testnet-deployer/files"
+	"dynamicledger.com/testnet-deployer/structs"
 
 	b64 "encoding/base64"
 )
 
 func (ch *ContractHandler) loadContracts() {
-	contracts := []Contract{}
+	contracts := []structs.Contract{}
 
 	ch.getManifest()
 
-	for k, c := range ch.manifest.Contracts {
+	for k, c := range ch.Manifest.Contracts {
 		if c.Exclude {
 			continue
 		}
@@ -23,7 +24,7 @@ func (ch *ContractHandler) loadContracts() {
 		var blank string
 		if c.Hash == blank {
 			hash := getContractHash(con)
-			ch.manifest.Contracts[k].Hash = hash
+			ch.Manifest.Contracts[k].Hash = hash
 		}
 
 		contracts = append(contracts, con)
@@ -32,17 +33,17 @@ func (ch *ContractHandler) loadContracts() {
 	// Write the manifest file in case there are new hashes
 	ch.storeManifest()
 
-	ch.contracts = contracts
+	ch.Contracts = contracts
 }
 
-func (ch *ContractHandler) readContract(contractMeta contractMetadata) Contract {
-	c := Contract{}
-	c.name = contractMeta.Name
-	c.version = contractMeta.Version
+func (ch *ContractHandler) readContract(contractMeta structs.ContractMetadata) structs.Contract {
+	c := structs.Contract{}
+	c.Name = contractMeta.Name
+	c.Version = contractMeta.Version
 
 	data := files.ReadFile(contractMeta.Path)
 
-	c.data = b64.StdEncoding.EncodeToString(data)
+	c.Data = b64.StdEncoding.EncodeToString(data)
 
 	return c
 }

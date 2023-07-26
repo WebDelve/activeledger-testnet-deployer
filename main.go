@@ -9,7 +9,7 @@ import (
 	"dynamicledger.com/testnet-deployer/config"
 	"dynamicledger.com/testnet-deployer/contracts"
 	"dynamicledger.com/testnet-deployer/files"
-	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/structs"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
@@ -23,7 +23,7 @@ func main() {
 
 	config := config.LoadConfig()
 
-	setupData := helper.SetupData{}
+	setupData := structs.SetupData{}
 
 	setupData.Conn = alsdk.Connection{
 		Protocol: alsdk.HTTP,

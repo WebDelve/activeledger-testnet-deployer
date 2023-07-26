@@ -6,56 +6,57 @@ import (
 
 	"dynamicledger.com/testnet-deployer/files"
 	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/structs"
 )
 
 func (ch *ContractHandler) getManifest() {
-	var man contractManifest
+	var man structs.ContractManifest
 
-	data := files.ReadFile(ch.config.ContractManifest)
+	data := files.ReadFile(ch.Config.ContractManifest)
 	if err := json.Unmarshal(data, &man); err != nil {
 		helper.HandleError(err, "Error parsing contract manifest file")
 	}
 
-	ch.manifest = man
+	ch.Manifest = man
 }
 
 func (ch *ContractHandler) updateContractHashes() {
 
-	newMetadata := []contractMetadata{}
+	newMetadata := []structs.ContractMetadata{}
 
-	for _, c := range ch.contracts {
-		con := matchContractManifest(c.name, ch.manifest.Contracts)
+	for _, c := range ch.Contracts {
+		con := matchContractManifest(c.Name, ch.Manifest.Contracts)
 		con.Hash = getContractHash(c)
 		newMetadata = append(newMetadata, con)
 	}
 
-	ch.manifest.Contracts = newMetadata
+	ch.Manifest.Contracts = newMetadata
 	ch.storeManifest()
 
 }
 
-func matchContractManifest(name string, manifest []contractMetadata) contractMetadata {
+func matchContractManifest(name string, manifest []structs.ContractMetadata) structs.ContractMetadata {
 	for _, c := range manifest {
 		if c.Name == name {
 			return c
 		}
 	}
 
-	return contractMetadata{}
+	return structs.ContractMetadata{}
 }
 
 func (ch *ContractHandler) storeManifest() {
-	bMan, err := json.Marshal(ch.manifest)
+	bMan, err := json.Marshal(ch.Manifest)
 	if err != nil {
 		helper.HandleError(err, "Error marshalling manifest data")
 	}
 
-	files.WriteFile(ch.config.ContractManifest, bMan)
+	files.WriteFile(ch.Config.ContractManifest, bMan)
 }
 
-func getContractHash(contract Contract) string {
+func getContractHash(contract structs.Contract) string {
 	hasher := sha256.New()
-	hasher.Write([]byte(contract.data))
+	hasher.Write([]byte(contract.Data))
 
 	hash := hasher.Sum(nil)
 

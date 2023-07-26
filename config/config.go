@@ -5,10 +5,11 @@ import (
 
 	"dynamicledger.com/testnet-deployer/files"
 	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/structs"
 )
 
-func LoadConfig() *helper.Config {
-	var c helper.Config
+func LoadConfig() *structs.Config {
+	var c structs.Config
 
 	data := files.ReadFile("./config.json")
 

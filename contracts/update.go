@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/structs"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
 type ContractUpdater struct {
-	manifest          contractManifest
-	contractData      []Contract
-	contractsToUpdate []Contract
-	setup             *helper.SetupData
-	config            *helper.Config
+	manifest          structs.ContractManifest
+	contractData      []structs.Contract
+	contractsToUpdate []structs.Contract
+	setup             *structs.SetupData
+	config            *structs.Config
 	transactions      []contractUpdateTx
 }
 
@@ -24,11 +25,11 @@ type contractUpdateTx struct {
 func (ch *ContractHandler) getContractUpdater() ContractUpdater {
 
 	u := ContractUpdater{
-		manifest:          ch.manifest,
-		contractData:      ch.contracts,
-		contractsToUpdate: []Contract{},
-		setup:             ch.setup,
-		config:            ch.config,
+		manifest:          ch.Manifest,
+		contractData:      ch.Contracts,
+		contractsToUpdate: []structs.Contract{},
+		setup:             ch.Setup,
+		config:            ch.Config,
 	}
 
 	return u
@@ -52,11 +53,11 @@ func (cu *ContractUpdater) findChangedContracts() {
 	}
 }
 
-func (cu *ContractUpdater) contractChanged(contract Contract) bool {
+func (cu *ContractUpdater) contractChanged(contract structs.Contract) bool {
 	hash := getContractHash(contract)
 
 	for _, c := range cu.manifest.Contracts {
-		if c.Name == contract.name {
+		if c.Name == contract.Name {
 			return c.Hash != hash
 		}
 	}
@@ -76,13 +77,19 @@ func (cu *ContractUpdater) updateChangedContracts() {
 	cu.runTransactions()
 }
 
-func (cu *ContractUpdater) buildContractUpdateTx(contract Contract) {
+func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 	input := alsdk.DataWrapper{
-		"version":   contract.version,
+		"version":   contract.Version,
 		"namespace": cu.setup.Namespace,
-		"name":      contract.name,
-		"contract":  contract.data,
+		"name":      contract.Name,
+		"contract":  contract.Data,
 	}
+
+	// contractId := contract.
+
+	// output := alsdk.DataWrapper{
+	// cu.setup.Con
+	// }
 
 	txOpts := alsdk.TransactionOpts{
 		StreamID:  cu.setup.Identity,
@@ -95,14 +102,14 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract Contract) {
 
 	txHan, _, err := alsdk.BuildTransaction(txOpts)
 	if err != nil {
-		helper.HandleError(err, fmt.Sprintf("Error building contract update transaction for contract %s", contract.name))
+		helper.HandleError(err, fmt.Sprintf("Error building contract update transaction for contract %s", contract.Name))
 	}
 
 	tx := txHan.GetTransaction()
 
 	txData := contractUpdateTx{
 		tx:           tx,
-		contractName: contract.name,
+		contractName: contract.Name,
 	}
 
 	cu.transactions = append(cu.transactions, txData)
