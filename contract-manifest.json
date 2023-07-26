@@ -1,9 +1,0 @@
-{
-    "contracts": [
-        {
-            "name": "contractname",
-            "path": "smartcontracts/contract.ts",
-            "exclude": false
-        }
-    ]
-}

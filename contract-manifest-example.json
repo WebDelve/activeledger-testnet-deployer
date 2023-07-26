@@ -1,0 +1,16 @@
+{
+  "contracts": [
+    {
+      "name": "contract1",
+      "path": "smartcontracts/contract1.ts",
+      "version": "0.0.1",
+      "exclude": false
+    },
+    {
+      "name": "contract2",
+      "path": "smartcontracts/contract2.ts",
+      "version": "0.0.1",
+      "exclude": false
+    }
+  ]
+}

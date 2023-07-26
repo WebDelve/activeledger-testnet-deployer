@@ -1,8 +1,0 @@
-{
-    "identity": "someiden",
-    "namespace": "somenamespace",
-    "contractDir": "smartcontracts",
-    "contractManifest": "contract-manifest.json",
-    "setupDataSaveFile": "setup-output.json",
-    "testnetFolder": "sometestnet"
-}
