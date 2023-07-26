@@ -2,6 +2,7 @@ package contracts
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 
 	"dynamicledger.com/testnet-deployer/files"
@@ -60,5 +61,7 @@ func getContractHash(contract structs.Contract) string {
 
 	hash := hasher.Sum(nil)
 
-	return string(hash)
+	encoded := base64.StdEncoding.EncodeToString(hash)
+
+	return encoded
 }
