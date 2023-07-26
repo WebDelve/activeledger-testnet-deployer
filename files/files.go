@@ -11,7 +11,7 @@ import (
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
-func SaveSetupData(data *structs.SetupData, contractData *[]structs.ContractStore, path string) {
+func SaveSetupData(data *structs.SetupData, contractData []structs.ContractStore, path string) {
 	prvKey := data.KeyHandler.GetPrivatePEM()
 	pubKey := data.KeyHandler.GetPublicPEM()
 
@@ -36,7 +36,7 @@ func SaveSetupData(data *structs.SetupData, contractData *[]structs.ContractStor
 
 	toStore := structs.SetupStore{
 		KeyData:      keyData,
-		ContractData: *contractData,
+		ContractData: contractData,
 		Identity:     string(data.Identity),
 		Namespace:    data.Namespace,
 	}

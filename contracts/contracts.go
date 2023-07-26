@@ -30,6 +30,10 @@ func SetupContractHandler(config *structs.Config, setup *structs.SetupData) Cont
 	return ch
 }
 
+func (ch *ContractHandler) GetContractData() []structs.ContractStore {
+	return ch.Store
+}
+
 func (ch *ContractHandler) UpdateContracts() {
 	updater := ch.getContractUpdater()
 	updater.Update()
@@ -49,10 +53,6 @@ func (ch *ContractHandler) mergeInChangedContracts(changedContracts []structs.Co
 			}
 		}
 	}
-}
-
-func (ch *ContractHandler) GetContractData() []structs.ContractStore {
-	return ch.Store
 }
 
 func (ch *ContractHandler) labelContract(contract structs.Contract, contractId string) {
@@ -80,7 +80,7 @@ func (ch *ContractHandler) labelContract(contract structs.Contract, contractId s
 
 	tx := txHan.GetTransaction()
 
-	resp, err := alsdk.Send(*tx, ch.Setup.Conn)
+	resp, err := alsdk.Send(tx, ch.Setup.Conn)
 	if err != nil {
 		helper.HandleALError(err, resp, fmt.Sprintf("Error running contract lin transaction for contract %s", contract.Name))
 	}

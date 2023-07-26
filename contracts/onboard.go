@@ -8,7 +8,7 @@ import (
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
-func (ch ContractHandler) OnboardContracts() {
+func (ch *ContractHandler) OnboardContracts() {
 	fmt.Println("Onboarding contracts...")
 
 	data := []structs.ContractStore{}
@@ -17,6 +17,10 @@ func (ch ContractHandler) OnboardContracts() {
 		contractData := ch.onboardContract(c)
 		data = append(data, contractData)
 	}
+
+	ch.updateContractHashes()
+
+	ch.Store = data
 }
 
 func (ch *ContractHandler) onboardContract(contract structs.Contract) structs.ContractStore {
@@ -44,7 +48,7 @@ func (ch *ContractHandler) onboardContract(contract structs.Contract) structs.Co
 
 	tx := txHan.GetTransaction()
 
-	resp, err := alsdk.Send(*tx, ch.Setup.Conn)
+	resp, err := alsdk.Send(tx, ch.Setup.Conn)
 	if err != nil {
 		helper.HandleALError(err, resp, fmt.Sprintf("Error running onboarding transaction for contract %s", contract.Name))
 	}

@@ -36,7 +36,7 @@ func (b *Bootstrapper) Bootstrap() {
 	b.createNamespace()
 	b.onboardSmartContracts()
 
-	files.SaveSetupData(b.setup, &b.contractData, b.config.SetupDataSaveFile)
+	files.SaveSetupData(b.setup, b.contractData, b.config.SetupDataSaveFile)
 
 	fmt.Printf("\n\nBootstrapping complete\n\n")
 }
@@ -136,7 +136,7 @@ func (b *Bootstrapper) createIden() {
 
 	tx := txHan.GetTransaction()
 
-	resp, err := alsdk.Send(*tx, b.setup.Conn)
+	resp, err := alsdk.Send(tx, b.setup.Conn)
 	if err != nil {
 		helper.HandleALError(err, resp, "Error sending identity onboarding transaction")
 	}
@@ -179,7 +179,7 @@ func (b *Bootstrapper) createNamespace() {
 
 	tx := txHan.GetTransaction()
 
-	resp, err := alsdk.Send(*tx, b.setup.Conn)
+	resp, err := alsdk.Send(tx, b.setup.Conn)
 	if err != nil {
 		helper.HandleALError(err, resp, "Error sending namespace transaction")
 	}

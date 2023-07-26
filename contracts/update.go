@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"dynamicledger.com/testnet-deployer/helper"
@@ -18,7 +19,7 @@ type ContractUpdater struct {
 }
 
 type contractUpdateTx struct {
-	tx           *alsdk.Transaction
+	tx           alsdk.Transaction
 	contractName string
 }
 
@@ -74,11 +75,17 @@ func (cu *ContractUpdater) updateChangedContracts() {
 
 	// Build the update transactions
 	for _, contract := range contracts {
+		fmt.Printf("Contract:\n\n%v\n\n", contract)
 		cu.buildContractUpdateTx(contract)
 	}
 
+	for _, t := range cu.transactions {
+		bT, _ := json.MarshalIndent(t, "", "  ")
+		fmt.Printf("Transaction: \n\n%s\n\n", string(bT))
+	}
+
 	// Run them all
-	cu.runTransactions()
+	// cu.runTransactions()
 }
 
 func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
@@ -89,19 +96,21 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 		"contract":  contract.Data,
 	}
 
-	contractId := alsdk.StreamID(contract.Id)
-	output := alsdk.DataWrapper{}
-	output[contractId] = "{}"
+	contractId := contract.Id
 
 	txOpts := alsdk.TransactionOpts{
-		StreamID:  cu.setup.Identity,
-		Contract:  "contract",
-		Namespace: "default",
-		Entry:     "update",
-		Input:     input,
-		Output:    output,
-		Key:       cu.setup.KeyHandler,
+		StreamID:       cu.setup.Identity,
+		OutputStreamID: alsdk.StreamID(contractId),
+		Contract:       "contract",
+		Namespace:      "default",
+		Entry:          "update",
+		Input:          input,
+		Output:         alsdk.DataWrapper{},
+		Key:            cu.setup.KeyHandler,
 	}
+
+	fmt.Printf("StreamID: %s\n", txOpts.StreamID)
+	fmt.Printf("OutputStreamID: %s\n", txOpts.OutputStreamID)
 
 	txHan, _, err := alsdk.BuildTransaction(txOpts)
 	if err != nil {
@@ -109,6 +118,8 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 	}
 
 	tx := txHan.GetTransaction()
+	bT, _ := json.MarshalIndent(tx, "", "  ")
+	fmt.Printf("Transaction: \n\n%s\n\n", string(bT))
 
 	txData := contractUpdateTx{
 		tx:           tx,
@@ -120,7 +131,7 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 
 func (cu *ContractUpdater) runTransactions() {
 	for _, t := range cu.transactions {
-		resp, err := alsdk.Send(*t.tx, cu.setup.Conn)
+		resp, err := alsdk.Send(t.tx, cu.setup.Conn)
 		if err != nil {
 			helper.HandleALError(err, resp, fmt.Sprintf("Error running update transaction %s", t.contractName))
 		}

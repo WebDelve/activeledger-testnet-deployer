@@ -1,2 +1,6 @@
 github.com/activeledger/SDK-Golang/v2 v2.0.0-20221102193703-1222811232fb h1:obYa2q5t0aA/4JnMfu+HkCbGSrZQu8MjxMyRxbZhVCQ=
 github.com/activeledger/SDK-Golang/v2 v2.0.0-20221102193703-1222811232fb/go.mod h1:49j+CQiiGREd/VTjBOYot6Dd5RKituR6x24bAOMXlhQ=
+github.com/activeledger/SDK-Golang/v2 v2.0.0-20230704120559-44ffc9c689f2 h1:vP2UWY9rf2CrjR2hieXAxxTewFwOv77+aZQ9BUosD8E=
+github.com/activeledger/SDK-Golang/v2 v2.0.0-20230704120559-44ffc9c689f2/go.mod h1:8oZT1ddekNXdWhKbofvIgSPWNkj3qhFETOM7MGKzQWo=
+github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564 h1:I6KUy4CI6hHjqnyJLNCEi7YHVMkwwtfSr2k9splgdSM=
+github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564/go.mod h1:yekO+3ZShy19S+bsmnERmznGy9Rfg6dWWWpiGJjNAz8=
