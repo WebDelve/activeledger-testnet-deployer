@@ -8,6 +8,7 @@ import (
 	"dynamicledger.com/testnet-deployer/bootstrap"
 	"dynamicledger.com/testnet-deployer/config"
 	"dynamicledger.com/testnet-deployer/contracts"
+	"dynamicledger.com/testnet-deployer/files"
 	"dynamicledger.com/testnet-deployer/helper"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
@@ -39,6 +40,7 @@ func main() {
 	}
 
 	if flags.updateContracts {
+		setupData = files.ReadSetupData(config)
 		conHan := contracts.SetupContractHandler(config, &setupData)
 		conHan.UpdateContracts()
 	}

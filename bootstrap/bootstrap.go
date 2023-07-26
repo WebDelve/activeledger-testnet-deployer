@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 
-	"dynamicledger.com/testnet-deployer/config"
 	"dynamicledger.com/testnet-deployer/contracts"
 	"dynamicledger.com/testnet-deployer/files"
 	"dynamicledger.com/testnet-deployer/helper"
@@ -15,12 +14,12 @@ import (
 )
 
 type Bootstrapper struct {
-	config       *config.Config
+	config       *helper.Config
 	setup        *helper.SetupData
 	contractData []files.ContractStore
 }
 
-func GetBootstrapper(config *config.Config, setupData *helper.SetupData) Bootstrapper {
+func GetBootstrapper(config *helper.Config, setupData *helper.SetupData) Bootstrapper {
 	return Bootstrapper{
 		config,
 		setupData,

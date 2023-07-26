@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"dynamicledger.com/testnet-deployer/helper"
+	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
 type SetupStore struct {
@@ -66,6 +67,36 @@ func SaveSetupData(data *helper.SetupData, contractData *[]ContractStore, path s
 
 	WriteFile(path, bData)
 
+}
+
+func ReadSetupData(config *helper.Config) helper.SetupData {
+	bSetup := ReadFile(config.SetupDataSaveFile)
+
+	var setupStore SetupStore
+	if err := json.Unmarshal(bSetup, &setupStore); err != nil {
+		helper.HandleError(err, "Error unmarshalling setup data")
+	}
+
+	keyHan, err := alsdk.SetKey(setupStore.KeyData.PublicPem, alsdk.RSA)
+	if err != nil {
+		helper.HandleError(err, "Error setting up key handler")
+	}
+
+	connection := alsdk.Connection{
+		Protocol: alsdk.HTTP,
+		Url:      "localhost",
+		Port:     "5260",
+	}
+
+	setup := helper.SetupData{
+		Folder:     config.TestnetFolder,
+		Identity:   alsdk.StreamID(setupStore.Identity),
+		Namespace:  setupStore.Namespace,
+		KeyHandler: keyHan,
+		Conn:       connection,
+	}
+
+	return setup
 }
 
 func ReadFile(path string) []byte {

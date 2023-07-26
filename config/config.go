@@ -7,17 +7,8 @@ import (
 	"dynamicledger.com/testnet-deployer/helper"
 )
 
-type Config struct {
-	DefaultIdentity   string `json:"identity"`
-	DefaultNamespace  string `json:"namespace"`
-	ContractFolder    string `json:"contractDir"`
-	ContractManifest  string `json:"contractManifest"`
-	SetupDataSaveFile string `json:"setupDataSaveFile"`
-	TestnetFolder     string `json:"testnetFolder"`
-}
-
-func LoadConfig() *Config {
-	var c Config
+func LoadConfig() *helper.Config {
+	var c helper.Config
 
 	data := files.ReadFile("./config.json")
 

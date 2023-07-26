@@ -3,7 +3,6 @@ package contracts
 import (
 	"fmt"
 
-	"dynamicledger.com/testnet-deployer/config"
 	"dynamicledger.com/testnet-deployer/files"
 	"dynamicledger.com/testnet-deployer/helper"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
@@ -11,7 +10,7 @@ import (
 
 type ContractHandler struct {
 	setup     *helper.SetupData
-	config    *config.Config
+	config    *helper.Config
 	manifest  contractManifest
 	store     []files.ContractStore
 	contracts []Contract
@@ -35,7 +34,7 @@ type contractMetadata struct {
 	Hash    string `json:"hash"`
 }
 
-func SetupContractHandler(config *config.Config, setup *helper.SetupData) ContractHandler {
+func SetupContractHandler(config *helper.Config, setup *helper.SetupData) ContractHandler {
 	ch := ContractHandler{
 		setup:    setup,
 		config:   config,

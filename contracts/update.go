@@ -3,7 +3,6 @@ package contracts
 import (
 	"fmt"
 
-	"dynamicledger.com/testnet-deployer/config"
 	"dynamicledger.com/testnet-deployer/helper"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
@@ -13,7 +12,7 @@ type ContractUpdater struct {
 	contractData      []Contract
 	contractsToUpdate []Contract
 	setup             *helper.SetupData
-	config            *config.Config
+	config            *helper.Config
 	transactions      []contractUpdateTx
 }
 
