@@ -33,6 +33,22 @@ func SetupContractHandler(config *structs.Config, setup *structs.SetupData) Cont
 func (ch *ContractHandler) UpdateContracts() {
 	updater := ch.getContractUpdater()
 	updater.Update()
+
+	changedContracts := updater.GetChangedContracts()
+
+	ch.mergeInChangedContracts(changedContracts)
+	ch.updateContractHashes()
+}
+
+func (ch *ContractHandler) mergeInChangedContracts(changedContracts []structs.Contract) {
+	for _, changed := range changedContracts {
+		for i, contract := range ch.Contracts {
+			if contract.Id == changed.Id {
+				ch.Contracts[i] = changed
+				break
+			}
+		}
+	}
 }
 
 func (ch *ContractHandler) GetContractData() []structs.ContractStore {

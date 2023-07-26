@@ -36,6 +36,10 @@ func (ch *ContractHandler) getContractUpdater() ContractUpdater {
 
 }
 
+func (cu *ContractUpdater) GetChangedContracts() []structs.Contract {
+	return cu.contractsToUpdate
+}
+
 func (cu *ContractUpdater) Update() {
 	fmt.Println("Updating changed contracts...")
 	cu.findChangedContracts()
