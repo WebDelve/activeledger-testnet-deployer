@@ -85,11 +85,9 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 		"contract":  contract.Data,
 	}
 
-	// contractId := contract.
-
-	// output := alsdk.DataWrapper{
-	// cu.setup.Con
-	// }
+	contractId := alsdk.StreamID(contract.Id)
+	output := alsdk.DataWrapper{}
+	output[contractId] = "{}"
 
 	txOpts := alsdk.TransactionOpts{
 		StreamID:  cu.setup.Identity,
@@ -97,6 +95,7 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 		Namespace: "default",
 		Entry:     "update",
 		Input:     input,
+		Output:    output,
 		Key:       cu.setup.KeyHandler,
 	}
 
