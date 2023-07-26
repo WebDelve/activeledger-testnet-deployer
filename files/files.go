@@ -58,7 +58,7 @@ func ReadSetupData(config *structs.Config) structs.SetupData {
 		helper.HandleError(err, "Error unmarshalling setup data")
 	}
 
-	keyHan, err := alsdk.SetKey(setupStore.KeyData.PublicPem, alsdk.RSA)
+	keyHan, err := alsdk.SetKey(setupStore.KeyData.PrivatePem, alsdk.RSA)
 	if err != nil {
 		helper.HandleError(err, "Error setting up key handler")
 	}
