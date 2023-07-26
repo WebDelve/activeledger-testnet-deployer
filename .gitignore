@@ -1,2 +1,6 @@
+smartcontracts
+build.sh
+cleanstart.sh
 deployer
-releases/v1-linux.tar.gz
+deployer.tar.gz
+startup
