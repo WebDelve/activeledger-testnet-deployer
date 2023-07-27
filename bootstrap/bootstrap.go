@@ -20,12 +20,17 @@ type Bootstrapper struct {
 	contractData []structs.ContractStore
 }
 
-func GetBootstrapper(config *structs.Config, setupData *structs.SetupData) Bootstrapper {
+func GetBootstrapper(
+	config *structs.Config,
+	setupData *structs.SetupData,
+) Bootstrapper {
+
 	return Bootstrapper{
 		config,
 		setupData,
 		[]structs.ContractStore{},
 	}
+
 }
 
 func (b *Bootstrapper) Bootstrap() {
@@ -43,7 +48,10 @@ func (b *Bootstrapper) Bootstrap() {
 
 func getFolder(configuredFolder string) string {
 
-	fmt.Printf("Input base folder name, leave blank for default (default=%s): ", configuredFolder)
+	fmt.Printf(
+		"Input base folder name, leave blank for default (default=%s): ",
+		configuredFolder,
+	)
 
 	var folder string
 	fmt.Scanln(&folder)
@@ -74,14 +82,15 @@ func getFolder(configuredFolder string) string {
 		}
 	}
 
-	// Folder doesn't exist, create it
-	if errors.Is(err, os.ErrNotExist) {
-		if err := os.Mkdir(folder, 0755); err != nil {
-			helper.HandleError(err, "Error creating base folder")
-		}
-	} else if err != nil {
+	// Check if the error is NOT that the folder doesn't exist
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		// Some other error happened, handle it
-		helper.HandleError(err, "Error creating folder")
+		helper.HandleError(err, "Error checking if folder exists")
+	}
+
+	// Create folder, we've either deleted it or it never existed
+	if err := os.Mkdir(folder, 0755); err != nil {
+		helper.HandleError(err, "Error creating base folder")
 	}
 
 	return folder
