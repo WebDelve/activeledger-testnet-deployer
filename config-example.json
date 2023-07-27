@@ -1,0 +1,10 @@
+{
+  "identity": "identityname",
+  "namespace": "yournamespace",
+  "contractDir": "smartcontracts",
+  "contractManifest": "contract-manifest.json",
+  "setupDataSaveFile": "setup-output.json",
+  "testnetFolder": "testnet",
+  "logToFile": true,
+  "logFolder": "logs"
+}

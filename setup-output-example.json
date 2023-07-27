@@ -1,0 +1,20 @@
+{
+  "identity": "aad4eee5514a6351467bb231fd1b04ef0623bd67fa9c0c7ceb35d598afa3a83e",
+  "namespace": "testing",
+  "keyData": {
+    "publicPem": "-----BEGIN PUBLIC KEY----------END PUBLIC KEY-----\n",
+    "publicHash": "06fb41393247393b35666b77ee951370b9853bc8e5f7a105eb66f80cb232bff6",
+    "privatePem": "-----BEGIN RSA PRIVATE KEY----------END RSA PRIVATE KEY-----\n",
+    "privateHash": "09135b02d4bd4db36f62fa6387ef5dd8c82b57171939a2349fe5371b11b02143"
+  },
+  "contractData": [
+    {
+      "name": "contracttestone",
+      "id": "bffc2a517c10e4c8874b05748038f398e48044f4a87189fd56ac07c170bb59c9"
+    },
+    {
+      "name": "contracttesttwo",
+      "id": "c3e2211cd495ee9fe748a76ed56946fd82db96a694a465847e1f06076b13fb59"
+    }
+  ]
+}
