@@ -59,13 +59,19 @@ to be in the same local directory.
 }
 ```
 
-## Manifest
+# Manifest
 
 The manifest file contains a list of the smartcontracts you want to onboard to
 the testnet.
 
 You can also add ones that you don't yet want uploaded and use the `exclude: true`
 pairing to ignore them.
+
+The ID and Hash values can be left blank, they are set by the deployer automatically,
+the ID will be added when the contract/s are onboarded, and the deployer starts
+by checking for blank hashes and updating the manifest. It also will update the
+hashes as required. Hashes are used to check if any updates have been made
+to the contracts, if it finds none it won't continue.
 
 ### Sample Manifest
 
@@ -74,22 +80,77 @@ pairing to ignore them.
   "contracts": [
     {
       "name": "contractname",
+      "id": "contractstreamid",
       "path": "smartcontracts/contract.ts",
       "version": "0.0.1",
-      "exclude": false
+      "exclude": false,
+      "hash": "contractdatahash"
     }
   ]
 }
 ```
 
+# Setup Output
+
+Upon initial deployment the deployer will create a `setup-output.json` file
+(or the file name set in `config.json`). This file contains data that you will
+need when running transactions against the contracts, or that the deployer needs
+when updating contracts. The `"contractData"` array is purely for your reference
+as the same data is also set in the manifest for the deployer to access.
+
+The identity stored in this file is linked to the key, although the key can be
+used with other identities (not recommended), the identity is unusable without
+the correct key.
+It is worth noting that you only really need the Private PEM, as the rest of the
+key data can be recreated from that. The hashes can be used to verify that the
+PEMs are correct.
+
+The namespace will be set to the same one defined in `config.json`
+
+The `contractData` array is mainly used to provide users with easy reference
+to the name and ID.
+The name will match the one set in the manifest, and the ID is the stream ID
+Activeledger assigned when the contract was onboarded.
+The hash is not relevant here and is not set, it is a carry over from using
+the same struct internally and will likely be removed in future versions.
+
+```json
+{
+    "identity": "onboardedstreamid",
+    "namespace": "yournamespace",
+    "keyData": {
+        "publicPem": "publicpem",
+        "publicHash": "publichash",
+        "privatePem": "privatepem",
+        "privateHash": "privatehash"
+    },
+    "contractData": [
+        {
+            "name":"contractname",
+            "id": "contractstreamid",
+            "hash": ""
+        }
+    ]
+}
+```
+
 ## Todo
 
-A useful additonal feature would be to allow updating contracts or updating them.
+- When adding a new contract to the manifest, after others have been onboarded 
+already, needs to onboard that, there should be a flag in manifest that references
+this: `"onboarded": true`
+
+- ~~A useful additonal feature would be to allow updating contracts or updating them.
 The software would need to check for the existence of an output file, or perhaps
 should maintain a hidden file to keep track of things.
-Currently it will error on creating a testnet folder if one already exists.
-For this feature it should check the hashes of the contracts to find updated ones,
-update those, and upload any new ones.
+
+- For this feature it should check the hashes of the contracts to find updated ones,
+update those, and upload any new ones.~~
+Added in 2.0.0 - Stores a hash in the manifest
+
+- ~~Currently it will error on creating a testnet folder if one already exists.~~
+Added in 2.0.0 - Checks if folder exists, deletes and recreates it if it does
+Confirms with user before doing so.
 
 ## Changelog
 
@@ -97,10 +158,18 @@ update those, and upload any new ones.
 
 #### Features
 
-- Ability to update contracts and upload new ones based on hidden file
 - Check if Activeledger is installed (requires changes in Activeledger first)
 - Ability to attempt to install Activeledger if it isn't installed
 - Check if node/npm is installed
+
+### [2.0.0] - 2023-07-
+
+- Ability to update contracts and upload new ones ~~based on hidden file~~ hash
+in manifest
+- Check if given testnet folder exists, if it does ask if it should be removed
+if yes delete and recreate it, if no terminate
+- Refactored code into internal packages
+- Added sample json files
 
 ### [1.0.0] - 2023-06-30
 
@@ -109,4 +178,4 @@ update those, and upload any new ones.
 - Created the initial software
 - Runs `activeledger --testnet`
 - Onboards configured identity and namespace
-- Uploads smartcontracts as definied in manifest file
+- Uploads smartcontracts as defined in manifest file
