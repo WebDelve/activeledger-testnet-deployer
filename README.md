@@ -1,15 +1,11 @@
-<img src="assets/webdelve-logo.png" alt="WebDelve"/>
-
+<img src="assets/webdelve-logo.png" alt="WebDelve"/><br/>
 [WebDelve - Purpose Drive Software](https://webdelve.co)
 
 *** 
 
-<img src="https://github.com/activeledger/activeledger/blob/master/docs/assets/Asset-23.png" alt="Activeledger"/>
-
-This project is built to work with Activeledger
-
-[Activeledger on GitHub]( https://github.com/activeledger/activeledger )
-
+<img src="https://github.com/activeledger/activeledger/blob/master/docs/assets/Asset-23.png" alt="Activeledger" width="100"/><br/>
+This project is built to work with Activeledger<br/>
+[Activeledger on GitHub]( https://github.com/activeledger/activeledger )<br/>
 [Activeledger Website](https://activeledger.io)
 
 ***
