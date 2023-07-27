@@ -3,6 +3,7 @@ package contracts
 import (
 	"fmt"
 
+	"dynamicledger.com/testnet-deployer/files"
 	"dynamicledger.com/testnet-deployer/logging"
 	"dynamicledger.com/testnet-deployer/structs"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
@@ -29,6 +30,10 @@ func SetupContractHandler(
 		Manifest: structs.ContractManifest{},
 		Store:    []structs.ContractStore{},
 		Logger:   logger,
+	}
+
+	if len(setup.Contracts) > 0 {
+		ch.Store = setup.Contracts
 	}
 
 	ch.Logger.Info("Loading Contract manifest...")
@@ -65,6 +70,9 @@ func (ch *ContractHandler) UpdateContracts() {
 
 	ch.mergeInChangedContracts(changedContracts)
 	ch.setHashes(false)
+
+	fHan := files.GetFileHandler(ch.Logger)
+	fHan.SaveSetupData(ch.Setup, ch.Store, ch.Config.SetupDataSaveFile)
 }
 
 func (ch *ContractHandler) mergeInChangedContracts(changedContracts []structs.Contract) {
