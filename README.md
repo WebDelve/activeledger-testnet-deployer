@@ -236,7 +236,7 @@ CLI flag (e.g `-iv`) or an option in the config (e.g `"incrementVersion": true`)
 and will follow a basic schema defined in the config 
 e.g: `"versionIncrement": "-.-.i"` where `i` is the digit to increment
 
-### [2.0.0] - 2023-07-
+### [2.0.0] - 2023-07-27
 
 #### Added
 
