@@ -180,17 +180,17 @@ func (l *Logger) print(msg string, lv level, err error) {
 		)
 	}
 
+	// If verbose logging off skip outputting debugs
+	if !l.verboseLogging && lv == DEBUG {
+		return
+	}
+
 	if !l.headlessMode {
 		fmt.Print(output)
 
 		if lv == ERR {
 			fmt.Print(errMsg)
 		}
-	}
-
-	// If verbose logging off skip outputting debugs
-	if !l.verboseLogging && lv == DEBUG {
-		return
 	}
 
 	if l.writeToFile {
