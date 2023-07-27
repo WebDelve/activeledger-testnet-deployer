@@ -51,7 +51,7 @@ func (fh *FileHandler) SaveSetupData(data *structs.SetupData, contractData []str
 		Namespace:    data.Namespace,
 	}
 
-	bData, err := json.Marshal(toStore)
+	bData, err := json.MarshalIndent(toStore, "", "  ")
 	if err != nil {
 		fh.logger.Fatal(err, "Error marshalling data to store")
 	}
@@ -102,6 +102,6 @@ func (fh *FileHandler) ReadFile(path string) []byte {
 
 func (fh *FileHandler) WriteFile(path string, data []byte) {
 	if err := os.WriteFile(path, data, 0644); err != nil {
-		fh.logger.Fatal(err, fmt.Sprintf("Error writing data to file \"%s\"\n", path))
+		fh.logger.Fatal(err, fmt.Sprintf("Error writing data to file \"%s\"", path))
 	}
 }

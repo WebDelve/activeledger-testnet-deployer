@@ -85,7 +85,7 @@ func (ch *ContractHandler) setHashes(missingCheck bool) {
 }
 
 func (ch *ContractHandler) storeManifest() {
-	bMan, err := json.Marshal(ch.Manifest)
+	bMan, err := json.MarshalIndent(ch.Manifest, "", "  ")
 	if err != nil {
 		ch.Logger.Fatal(err, "Error marshalling manifest data")
 	}
