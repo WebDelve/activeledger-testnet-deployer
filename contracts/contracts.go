@@ -54,6 +54,15 @@ func (ch *ContractHandler) UpdateContracts() {
 	newContracts := updater.GetNewContracts()
 	ch.Contracts = append(ch.Contracts, newContracts...)
 
+	newMetadata := updater.GetNewMetadata()
+
+	for _, cMeta := range newMetadata {
+		ch.Store = append(ch.Store, cMeta)
+
+		ch.addIDToManifest(cMeta.Name, cMeta.ID)
+		ch.updateOnboardedStatus(cMeta.ID)
+	}
+
 	ch.mergeInChangedContracts(changedContracts)
 	ch.setHashes(false)
 }
@@ -76,36 +85,10 @@ func (ch *ContractHandler) mergeInChangedContracts(changedContracts []structs.Co
 	}
 }
 
-// func (ch *ContractHandler) addNewContracts(newContracts []structs.Contract) {
-// for _, newCon := range newContracts {
-// ch.Contracts = append(ch.Contracts, new)
-// }
-// }
-
 func (ch *ContractHandler) labelContract(contract structs.Contract, contractId string) {
 	ch.Logger.Info(fmt.Sprintf("\nLabeling contract %s..\n", contract.Name))
 
-	input := alsdk.DataWrapper{
-		"namespace": ch.Setup.Namespace,
-		"contract":  contractId,
-		"link":      contract.Name,
-	}
-
-	txOpts := alsdk.TransactionOpts{
-		StreamID:  ch.Setup.Identity,
-		Contract:  "contract",
-		Namespace: "default",
-		Entry:     "link",
-		Input:     input,
-		Key:       ch.Setup.KeyHandler,
-	}
-
-	txHan, _, err := alsdk.BuildTransaction(txOpts)
-	if err != nil {
-		ch.Logger.Fatal(err, fmt.Sprintf("Error building contract link transaction for contract %s", contract.Name))
-	}
-
-	tx := txHan.GetTransaction()
+	tx := buildLabelTx(contract.Name, contractId, ch.Setup, ch.Logger)
 
 	resp, err := alsdk.Send(tx, ch.Setup.Conn)
 	if err != nil {

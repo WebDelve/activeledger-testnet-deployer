@@ -67,7 +67,45 @@ func buildUpdateTx(
 
 	txHan, _, err := alsdk.BuildTransaction(txOpts)
 	if err != nil {
-		logger.Fatal(err, fmt.Sprintf("Error building contract update transaction for contract %s", contract.Name))
+		logger.Fatal(
+			err,
+			fmt.Sprintf("Error building contract update transaction for contract %s", contract.Name),
+		)
+	}
+
+	tx := txHan.GetTransaction()
+
+	return tx
+}
+
+func buildLabelTx(
+	contractName string,
+	contractId string,
+	setup *structs.SetupData,
+	logger *logging.Logger,
+) alsdk.Transaction {
+
+	input := alsdk.DataWrapper{
+		"namespace": setup.Namespace,
+		"contract":  contractId,
+		"link":      contractName,
+	}
+
+	txOpts := alsdk.TransactionOpts{
+		StreamID:  setup.Identity,
+		Contract:  "contract",
+		Namespace: "default",
+		Entry:     "link",
+		Input:     input,
+		Key:       setup.KeyHandler,
+	}
+
+	txHan, _, err := alsdk.BuildTransaction(txOpts)
+	if err != nil {
+		logger.Fatal(
+			err,
+			fmt.Sprintf("Error building contract link transaction for contract %s", contractName),
+		)
 	}
 
 	tx := txHan.GetTransaction()

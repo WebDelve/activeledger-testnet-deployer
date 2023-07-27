@@ -12,6 +12,7 @@ type ContractUpdater struct {
 	manifest          structs.ContractManifest
 	contractData      []structs.Contract
 	contractsToUpdate []structs.Contract
+	newContractsMeta  []structs.ContractStore
 	contractsToUpload []structs.Contract
 	setup             *structs.SetupData
 	config            *structs.Config
@@ -22,6 +23,7 @@ type ContractUpdater struct {
 type contractTx struct {
 	tx           alsdk.Transaction
 	contractName string
+	update       bool
 }
 
 func (ch *ContractHandler) getContractUpdater() ContractUpdater {
@@ -30,6 +32,7 @@ func (ch *ContractHandler) getContractUpdater() ContractUpdater {
 		manifest:          ch.Manifest,
 		contractData:      ch.Contracts,
 		contractsToUpdate: []structs.Contract{},
+		newContractsMeta:  []structs.ContractStore{},
 		contractsToUpload: []structs.Contract{},
 		setup:             ch.Setup,
 		config:            ch.Config,
@@ -47,6 +50,10 @@ func (cu *ContractUpdater) GetChangedContracts() []structs.Contract {
 
 func (cu *ContractUpdater) GetNewContracts() []structs.Contract {
 	return cu.contractsToUpload
+}
+
+func (cu *ContractUpdater) GetNewMetadata() []structs.ContractStore {
+	return cu.newContractsMeta
 }
 
 func (cu *ContractUpdater) Update() {
@@ -160,9 +167,29 @@ func (cu *ContractUpdater) buildNewContractTx(contract structs.Contract) {
 	txData := contractTx{
 		tx:           tx,
 		contractName: contract.Name,
+		update:       false,
 	}
 
 	cu.transactions = append(cu.transactions, txData)
+}
+
+func (cu *ContractUpdater) labelContract(contractName string, contractId string) {
+
+	cu.logger.Info(fmt.Sprintf("\nLabeling contract %s..\n", contractName))
+
+	tx := buildLabelTx(contractName, contractId, cu.setup, cu.logger)
+
+	resp, err := alsdk.Send(tx, cu.setup.Conn)
+	if err != nil {
+		cu.logger.ActiveledgerError(
+			err,
+			resp,
+			fmt.Sprintf("Error running contract link transaction for contract %s", contractName),
+		)
+	}
+
+	cu.logger.Info(fmt.Sprintf("Link created for contract %s.\n", contractName))
+
 }
 
 func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
@@ -170,6 +197,7 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 	txData := contractTx{
 		tx:           tx,
 		contractName: contract.Name,
+		update:       true,
 	}
 
 	cu.transactions = append(cu.transactions, txData)
@@ -181,5 +209,19 @@ func (cu *ContractUpdater) runTransactions() {
 		if err != nil {
 			cu.logger.ActiveledgerError(err, resp, fmt.Sprintf("Error running update transaction %s", t.contractName))
 		}
+
+		id := resp.Streams.Updated[0].ID
+
+		if !t.update {
+			id = resp.Streams.New[0].ID
+			data := structs.ContractStore{
+				Name: t.contractName,
+				ID:   id,
+			}
+
+			cu.newContractsMeta = append(cu.newContractsMeta, data)
+		}
+
+		cu.labelContract(t.contractName, id)
 	}
 }
