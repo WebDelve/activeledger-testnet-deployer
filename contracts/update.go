@@ -2,6 +2,7 @@ package contracts
 
 import (
 	"fmt"
+	"os"
 
 	"dynamicledger.com/testnet-deployer/logging"
 	"dynamicledger.com/testnet-deployer/structs"
@@ -63,6 +64,11 @@ func (cu *ContractUpdater) Update() {
 	cu.logger.Info("Finding new contracts...")
 	cu.findNewContracts()
 
+	if len(cu.contractsToUpload) <= 0 && len(cu.contractsToUpdate) <= 0 {
+		cu.logger.Info("No contracts to upload or update, quitting...")
+		os.Exit(0)
+	}
+
 	cu.logger.Info("Contracts found, creating new transactions...")
 	cu.createUpdateTxs()
 	cu.createNewContractTxs()
@@ -94,14 +100,21 @@ func (cu *ContractUpdater) contractChanged(contract structs.Contract) bool {
 	hash := getContractHash(contract)
 
 	for _, c := range cu.manifest.Contracts {
+		if c.Name != contract.Name {
+			continue
+		}
+
 		// Skip excluded or not onboarded contracts
 		if c.Exclude || !c.Onboarded {
 			continue
 		}
 
-		if c.Name == contract.Name {
-			return c.Hash != hash
+		isChanged := c.Hash != hash
+		if isChanged {
+			cu.logger.Info("Found updated contract: " + c.Name)
 		}
+
+		return true
 	}
 
 	return false
@@ -109,14 +122,18 @@ func (cu *ContractUpdater) contractChanged(contract structs.Contract) bool {
 
 func (cu *ContractUpdater) contractNotOnboarded(contract structs.Contract) bool {
 	for _, c := range cu.manifest.Contracts {
-		// skip excluded
-		if c.Exclude {
+		if c.Name != contract.Name {
 			continue
 		}
 
-		if !c.Onboarded {
-			return true
+		// skip excluded and onboarded
+		if c.Exclude || c.Onboarded {
+			continue
 		}
+
+		cu.logger.Info("Found new contract: " + c.Name)
+
+		return true
 	}
 
 	return false
@@ -210,18 +227,16 @@ func (cu *ContractUpdater) runTransactions() {
 			cu.logger.ActiveledgerError(err, resp, fmt.Sprintf("Error running update transaction %s", t.contractName))
 		}
 
-		id := resp.Streams.Updated[0].ID
-
 		if !t.update {
-			id = resp.Streams.New[0].ID
+			id := resp.Streams.New[0].ID
 			data := structs.ContractStore{
 				Name: t.contractName,
 				ID:   id,
 			}
 
 			cu.newContractsMeta = append(cu.newContractsMeta, data)
+			cu.labelContract(t.contractName, id)
 		}
 
-		cu.labelContract(t.contractName, id)
 	}
 }
