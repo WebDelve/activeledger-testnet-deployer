@@ -86,7 +86,7 @@ func (ch *ContractHandler) mergeInChangedContracts(changedContracts []structs.Co
 }
 
 func (ch *ContractHandler) labelContract(contract structs.Contract, contractId string) {
-	ch.Logger.Info(fmt.Sprintf("\nLabeling contract %s..\n", contract.Name))
+	ch.Logger.Info(fmt.Sprintf("Labeling contract %s..", contract.Name))
 
 	tx := buildLabelTx(contract.Name, contractId, ch.Setup, ch.Logger)
 
@@ -95,5 +95,5 @@ func (ch *ContractHandler) labelContract(contract structs.Contract, contractId s
 		ch.Logger.ActiveledgerError(err, resp, fmt.Sprintf("Error running contract lin transaction for contract %s", contract.Name))
 	}
 
-	ch.Logger.Info(fmt.Sprintf("Link created for contract %s.\n", contract.Name))
+	ch.Logger.Info(fmt.Sprintf("Link created for contract %s.", contract.Name))
 }

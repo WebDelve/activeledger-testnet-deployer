@@ -130,7 +130,7 @@ func (cu *ContractUpdater) requestVersionUpdate(currVersion string) string {
 
 	var blank string
 	if newVersion == blank {
-		cu.logger.Info(fmt.Sprintf("\nVersion unchanged, will use %s\n", currVersion))
+		cu.logger.Info(fmt.Sprintf("Version unchanged, will use %s", currVersion))
 		return currVersion
 	}
 
@@ -175,7 +175,7 @@ func (cu *ContractUpdater) buildNewContractTx(contract structs.Contract) {
 
 func (cu *ContractUpdater) labelContract(contractName string, contractId string) {
 
-	cu.logger.Info(fmt.Sprintf("\nLabeling contract %s..\n", contractName))
+	cu.logger.Info(fmt.Sprintf("Labeling contract %s..", contractName))
 
 	tx := buildLabelTx(contractName, contractId, cu.setup, cu.logger)
 
@@ -188,7 +188,7 @@ func (cu *ContractUpdater) labelContract(contractName string, contractId string)
 		)
 	}
 
-	cu.logger.Info(fmt.Sprintf("Link created for contract %s.\n", contractName))
+	cu.logger.Info(fmt.Sprintf("Link created for contract %s.", contractName))
 
 }
 

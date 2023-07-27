@@ -1,8 +1,10 @@
 package logging
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"dynamicledger.com/testnet-deployer/structs"
@@ -26,6 +28,9 @@ const (
 	WARN  level = 3
 	DEBUG level = 4
 )
+
+// Longest prefix, used for padding
+const prefixLength = 47
 
 func CreateLogger() Logger {
 	return Logger{
@@ -51,7 +56,7 @@ func (l *Logger) GetUserInput(msg string) string {
 		return blank
 	}
 
-	fmt.Print(msg)
+	fmt.Printf("\x1b[36;1m[Input] %s\x1b[0m", msg)
 
 	var resp string
 	fmt.Scanln(&resp)
@@ -85,57 +90,102 @@ func (l *Logger) ActiveledgerError(err error, resp alsdk.Response, msg string) {
 	os.Exit(2)
 }
 
+func addPadding(s string) string {
+	strLen := len(s)
+	padding := prefixLength - strLen
+
+	spl := strings.Split(s, " - ")
+
+	if padding == 0 {
+		s = fmt.Sprintf("%s %s] \x1b[0m", spl[0], spl[1])
+
+	} else {
+		for i := 0; i <= padding; i++ {
+			spl[0] = spl[0] + " "
+		}
+
+		s = spl[0] + spl[1] + "] \x1b[0m"
+	}
+
+	return s
+}
+
 func (l *Logger) print(msg string, lv level, err error) {
-	output := "\u001b[37m;1m"
+	output := ""
+	errMsg := ""
 
 	timestamp := getTimestamp()
 
 	switch lv {
 	case ERR:
+		prefix := fmt.Sprintf("\x1b[31;1m[%s - Error", timestamp)
+		prefix = addPadding(prefix)
+
 		output = fmt.Sprintf(
-			"%s\u001b[41m[%s - Error]\u001b[0m: %s\n%s\n",
-			output,
-			timestamp,
+			"%s%s\n",
+			prefix,
 			msg,
+		)
+		errMsg = fmt.Sprintf(
+			"%s%s\n",
+			prefix,
 			err,
 		)
 
 	case FATAL:
+		prefix := fmt.Sprintf("\x1b[31;1m[%s - FATAL Error", timestamp)
+		prefix = addPadding(prefix)
+
 		output = fmt.Sprintf(
-			"%s\u001b[41m[%s - FATAL Error]\u001b[0m: %s\n%s\n\nFatal error, shutting down",
-			output,
-			timestamp,
+			"%s%s\n",
+			prefix,
 			msg,
+		)
+		errMsg = fmt.Sprintf(
+			"%s%s\n",
+			prefix,
 			err,
 		)
 
+		errMsg = errMsg + "\n\nFatal error, shutting down\n"
+
 	case INFO:
+		prefix := fmt.Sprintf("\x1b[32;1m[%s - Info", timestamp)
+		prefix = addPadding(prefix)
+
 		output = fmt.Sprintf(
-			"%s\u001b[42m[%s - Info]\u001b[0m: %s\n",
-			output,
-			timestamp,
+			"%s%s\n",
+			prefix,
 			msg,
 		)
 
 	case WARN:
+		prefix := fmt.Sprintf("\x1b[33;1m[%s - Warning", timestamp)
+		prefix = addPadding(prefix)
+
 		output = fmt.Sprintf(
-			"%s\u001b[44m[%s - Warning]\u001b[0m: %s\n",
-			output,
-			timestamp,
+			"%s%s\n",
+			prefix,
 			msg,
 		)
 
 	case DEBUG:
+		prefix := fmt.Sprintf("\x1b[34;1m[%s - Debug", timestamp)
+		prefix = addPadding(prefix)
+
 		output = fmt.Sprintf(
-			"%s\u001b[46m[%s - Debug]\u001b[0m: %s\n",
-			output,
-			timestamp,
+			"%s%s\n",
+			prefix,
 			msg,
 		)
 	}
 
 	if !l.headlessMode {
 		fmt.Print(output)
+
+		if lv == ERR {
+			fmt.Print(errMsg)
+		}
 	}
 
 	// If verbose logging off skip outputting debugs
@@ -156,6 +206,25 @@ func (l *Logger) writeFile(data string) {
 		l.logFileName = fmt.Sprintf("%s.log", timestamp)
 	}
 
+	if err := folderCheck(l.logFolder); err != nil {
+		prefix := fmt.Sprintf("\x1b[31;1m[%s - FATAL Error", timestamp)
+		prefix = addPadding(prefix)
+
+		msg := "Error checking for log folder"
+
+		fmt.Printf(
+			"%s%s\n",
+			prefix,
+			msg,
+		)
+		fmt.Printf(
+			"%s%s\n\nFatal error, shutting down\n",
+			prefix,
+			err,
+		)
+
+	}
+
 	filepath := fmt.Sprintf("%s/%s", path, l.logFileName)
 
 	f, err := os.OpenFile(
@@ -165,27 +234,45 @@ func (l *Logger) writeFile(data string) {
 	)
 
 	if err != nil {
-		output := fmt.Sprintf(
-			"\u001b[37m;1m\u001b[41m[%s - Error]\u001b[0m: Unable to open log file \"%s\"\n%s\n\n",
-			timestamp,
-			filepath,
+		prefix := fmt.Sprintf("\x1b[31;1m[%s - FATAL Error", timestamp)
+		prefix = addPadding(prefix)
+
+		msg := "Unable to open log file"
+
+		fmt.Printf(
+			"%s%s\n",
+			prefix,
+			msg,
+		)
+		fmt.Printf(
+			"%s%s\n\nFatal error, shutting down\n",
+			prefix,
 			err,
 		)
 
-		fmt.Print(output)
+		os.Exit(3)
 	}
 
 	defer f.Close()
 
 	if _, err := f.WriteString(data); err != nil {
-		output := fmt.Sprintf(
-			"\u001b[37m;1m\u001b[41m[%s - Error]\u001b[0m: Unable to write to log file \"%s\"\n%s\n\n",
-			timestamp,
-			filepath,
+		prefix := fmt.Sprintf("\x1b[31;1m[%s - FATAL Error", timestamp)
+		prefix = addPadding(prefix)
+
+		msg := "Unable to write to log file"
+
+		fmt.Printf(
+			"%s%s\n",
+			prefix,
+			msg,
+		)
+		fmt.Printf(
+			"%s%s\n\nFatal error, shutting down\n",
+			prefix,
 			err,
 		)
 
-		fmt.Print(output)
+		os.Exit(3)
 	}
 }
 
@@ -193,4 +280,16 @@ func getTimestamp() string {
 	timestamp := time.Now()
 
 	return timestamp.Format(time.RFC3339)
+}
+
+func folderCheck(folder string) error {
+	_, err := os.Stat(folder)
+
+	if errors.Is(err, os.ErrNotExist) {
+		if err = os.Mkdir(folder, 0755); err != nil {
+			return err
+		}
+	}
+
+	return err
 }

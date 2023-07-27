@@ -23,7 +23,7 @@ func (ch *ContractHandler) OnboardContracts() {
 }
 
 func (ch *ContractHandler) onboardContract(contract structs.Contract) structs.ContractStore {
-	ch.Logger.Info(fmt.Sprintf("\nOnboarding %s contract...\n", contract.Name))
+	ch.Logger.Info(fmt.Sprintf("Onboarding %s contract...", contract.Name))
 
 	tx := buildOnboardTx(contract, ch.Setup, ch.Logger)
 
@@ -32,7 +32,7 @@ func (ch *ContractHandler) onboardContract(contract structs.Contract) structs.Co
 		ch.Logger.ActiveledgerError(err, resp, fmt.Sprintf("Error running onboarding transaction for contract %s", contract.Name))
 	}
 
-	ch.Logger.Info(fmt.Sprintf("%s contract onboarded.\n", contract.Name))
+	ch.Logger.Info(fmt.Sprintf("%s contract onboarded.", contract.Name))
 
 	data := structs.ContractStore{
 		Name: contract.Name,

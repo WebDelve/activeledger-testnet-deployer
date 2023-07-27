@@ -50,7 +50,7 @@ func (b *Bootstrapper) Bootstrap() {
 
 	b.fileHandler.SaveSetupData(b.setup, b.contractData, b.config.SetupDataSaveFile)
 
-	b.logger.Info("\n\nBootstrapping complete\n\n")
+	b.logger.Info("Bootstrapping complete")
 }
 
 func (b *Bootstrapper) getFolder(configuredFolder string) string {
@@ -116,7 +116,7 @@ func (b *Bootstrapper) createTestnet() {
 	}
 	b.logger.Info("Testnet created")
 
-	b.logger.Info("\nLeave this process running and start the testnet, navigate to the created folder and run 'node testnet'. When done return here and press enter to continue.")
+	b.logger.Info("Leave this process running and start the testnet, navigate to the created folder and run 'node testnet'. When done return here and press enter to continue.")
 	fmt.Scanln()
 }
 
@@ -201,7 +201,7 @@ func (b *Bootstrapper) createNamespace() {
 		b.logger.ActiveledgerError(err, resp, "Error sending namespace transaction")
 	}
 
-	b.logger.Info(fmt.Sprintf("Namespace '%s' created\n", b.setup.Namespace))
+	b.logger.Info(fmt.Sprintf("Namespace '%s' created", b.setup.Namespace))
 }
 
 func (b *Bootstrapper) onboardSmartContracts() {
