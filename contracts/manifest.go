@@ -21,29 +21,57 @@ func (ch *ContractHandler) getManifest() {
 	ch.Manifest = man
 }
 
-func (ch *ContractHandler) updateContractHashes() {
+func (ch *ContractHandler) addIDToManifest(contractName string, ID string) {
 
-	newMetadata := []structs.ContractMetadata{}
-
-	for _, c := range ch.Contracts {
-		con := matchContractManifest(c.Name, ch.Manifest.Contracts)
-		con.Hash = getContractHash(c)
-		newMetadata = append(newMetadata, con)
+	for i, cMeta := range ch.Manifest.Contracts {
+		if cMeta.Name == contractName {
+			ch.Manifest.Contracts[i].ID = ID
+		}
 	}
 
-	ch.Manifest.Contracts = newMetadata
 	ch.storeManifest()
 
 }
 
-func matchContractManifest(name string, manifest []structs.ContractMetadata) structs.ContractMetadata {
-	for _, c := range manifest {
-		if c.Name == name {
-			return c
+func (ch *ContractHandler) updateVersion(ID string, version string) {
+	for i, cMeta := range ch.Manifest.Contracts {
+		if cMeta.ID == ID {
+			ch.Manifest.Contracts[i].Version = version
+			break
 		}
 	}
 
-	return structs.ContractMetadata{}
+	ch.storeManifest()
+}
+
+func (ch *ContractHandler) setHashes(missingCheck bool) {
+	var blank string
+	hasChanges := false
+
+	for i, cMeta := range ch.Manifest.Contracts {
+
+		c := ch.readContract(cMeta)
+
+		if missingCheck && cMeta.Hash == blank {
+			hash := getContractHash(c)
+			ch.Manifest.Contracts[i].Hash = hash
+			hasChanges = true
+		}
+
+		if !missingCheck {
+			hash := getContractHash(c)
+
+			if ch.Manifest.Contracts[i].Hash != hash {
+				ch.Manifest.Contracts[i].Hash = hash
+				hasChanges = true
+			}
+		}
+
+	}
+
+	if hasChanges {
+		ch.storeManifest()
+	}
 }
 
 func (ch *ContractHandler) storeManifest() {

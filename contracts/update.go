@@ -31,6 +31,7 @@ func (ch *ContractHandler) getContractUpdater() ContractUpdater {
 		contractsToUpdate: []structs.Contract{},
 		setup:             ch.Setup,
 		config:            ch.Config,
+		transactions:      []contractUpdateTx{},
 	}
 
 	return u
@@ -70,22 +71,41 @@ func (cu *ContractUpdater) contractChanged(contract structs.Contract) bool {
 	return false
 }
 
+func requestVersionUpdate(currVersion string) string {
+	fmt.Printf(
+		"Current version is set to \"%s\", enter new version (leave blank to use existing): ",
+		currVersion,
+	)
+
+	var newVersion string
+	fmt.Scanln(&newVersion)
+
+	var blank string
+	if newVersion == blank {
+		fmt.Printf("\nVersion unchanged, will use %s\n", currVersion)
+		return currVersion
+	}
+
+	return newVersion
+}
+
 func (cu *ContractUpdater) updateChangedContracts() {
 	contracts := cu.contractsToUpdate
 
 	// Build the update transactions
-	for _, contract := range contracts {
-		fmt.Printf("Contract:\n\n%v\n\n", contract)
+	for i, contract := range contracts {
+
+		newVersionNum := requestVersionUpdate(contract.Version)
+		if newVersionNum != contract.Version {
+			contract.Version = newVersionNum
+			cu.contractsToUpdate[i].Version = contract.Version
+		}
+
 		cu.buildContractUpdateTx(contract)
 	}
 
-	for _, t := range cu.transactions {
-		bT, _ := json.MarshalIndent(t, "", "  ")
-		fmt.Printf("Transaction: \n\n%s\n\n", string(bT))
-	}
-
 	// Run them all
-	// cu.runTransactions()
+	cu.runTransactions()
 }
 
 func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
@@ -109,17 +129,12 @@ func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
 		Key:            cu.setup.KeyHandler,
 	}
 
-	fmt.Printf("StreamID: %s\n", txOpts.StreamID)
-	fmt.Printf("OutputStreamID: %s\n", txOpts.OutputStreamID)
-
 	txHan, _, err := alsdk.BuildTransaction(txOpts)
 	if err != nil {
 		helper.HandleError(err, fmt.Sprintf("Error building contract update transaction for contract %s", contract.Name))
 	}
 
 	tx := txHan.GetTransaction()
-	bT, _ := json.MarshalIndent(tx, "", "  ")
-	fmt.Printf("Transaction: \n\n%s\n\n", string(bT))
 
 	txData := contractUpdateTx{
 		tx:           tx,

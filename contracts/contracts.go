@@ -24,6 +24,10 @@ func SetupContractHandler(config *structs.Config, setup *structs.SetupData) Cont
 		Store:    []structs.ContractStore{},
 	}
 
+	fmt.Println("Loading Contract manifest...")
+	ch.getManifest()
+	fmt.Println("Manifest loaded")
+
 	fmt.Println("Loading contracts...")
 	ch.loadContracts()
 
@@ -41,13 +45,17 @@ func (ch *ContractHandler) UpdateContracts() {
 	changedContracts := updater.GetChangedContracts()
 
 	ch.mergeInChangedContracts(changedContracts)
-	ch.updateContractHashes()
+	ch.setHashes(false)
 }
 
 func (ch *ContractHandler) mergeInChangedContracts(changedContracts []structs.Contract) {
 	for _, changed := range changedContracts {
 		for i, contract := range ch.Contracts {
 			if contract.Id == changed.Id {
+				if contract.Version != changed.Version {
+					ch.updateVersion(contract.Id, changed.Version)
+				}
+
 				ch.Contracts[i] = changed
 				break
 			}

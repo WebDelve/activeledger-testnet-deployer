@@ -19,7 +19,7 @@ type ContractManifest struct {
 
 type ContractMetadata struct {
 	Name    string `json:"name"`
-	ID      string `json:"streamid"`
+	ID      string `json:"id"`
 	Path    string `json:"path"`
 	Version string `json:"version"`
 	Exclude bool   `json:"exclude"`

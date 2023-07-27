@@ -18,7 +18,7 @@ func (ch *ContractHandler) OnboardContracts() {
 		data = append(data, contractData)
 	}
 
-	ch.updateContractHashes()
+	ch.setHashes(false)
 
 	ch.Store = data
 }
@@ -59,6 +59,8 @@ func (ch *ContractHandler) onboardContract(contract structs.Contract) structs.Co
 		Name: contract.Name,
 		ID:   resp.Streams.New[0].ID,
 	}
+
+	ch.addIDToManifest(contract.Name, data.ID)
 
 	ch.labelContract(contract, data.ID)
 
