@@ -1,10 +1,9 @@
 package contracts
 
 import (
-	"encoding/json"
 	"fmt"
 
-	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/logging"
 	"dynamicledger.com/testnet-deployer/structs"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
@@ -13,12 +12,14 @@ type ContractUpdater struct {
 	manifest          structs.ContractManifest
 	contractData      []structs.Contract
 	contractsToUpdate []structs.Contract
+	contractsToUpload []structs.Contract
 	setup             *structs.SetupData
 	config            *structs.Config
-	transactions      []contractUpdateTx
+	transactions      []contractTx
+	logger            *logging.Logger
 }
 
-type contractUpdateTx struct {
+type contractTx struct {
 	tx           alsdk.Transaction
 	contractName string
 }
@@ -29,9 +30,11 @@ func (ch *ContractHandler) getContractUpdater() ContractUpdater {
 		manifest:          ch.Manifest,
 		contractData:      ch.Contracts,
 		contractsToUpdate: []structs.Contract{},
+		contractsToUpload: []structs.Contract{},
 		setup:             ch.Setup,
 		config:            ch.Config,
-		transactions:      []contractUpdateTx{},
+		transactions:      []contractTx{},
+		logger:            ch.Logger,
 	}
 
 	return u
@@ -42,13 +45,34 @@ func (cu *ContractUpdater) GetChangedContracts() []structs.Contract {
 	return cu.contractsToUpdate
 }
 
+func (cu *ContractUpdater) GetNewContracts() []structs.Contract {
+	return cu.contractsToUpload
+}
+
 func (cu *ContractUpdater) Update() {
-	fmt.Println("Updating changed contracts...")
+	cu.logger.Info("Updating changed contracts...")
+	cu.logger.Info("Finding changed contracts...")
 	cu.findChangedContracts()
+	cu.logger.Info("Finding new contracts...")
+	cu.findNewContracts()
 
-	cu.updateChangedContracts()
+	cu.logger.Info("Contracts found, creating new transactions...")
+	cu.createUpdateTxs()
+	cu.createNewContractTxs()
 
-	fmt.Println("Contracts updated")
+	// Run them all
+	cu.logger.Info("Transactions created, running them...")
+	cu.runTransactions()
+
+	cu.logger.Info("Contracts updated/uploaded")
+}
+
+func (cu *ContractUpdater) findNewContracts() {
+	for _, c := range cu.contractData {
+		if cu.contractNotOnboarded(c) {
+			cu.contractsToUpload = append(cu.contractsToUpload, c)
+		}
+	}
 }
 
 func (cu *ContractUpdater) findChangedContracts() {
@@ -63,6 +87,11 @@ func (cu *ContractUpdater) contractChanged(contract structs.Contract) bool {
 	hash := getContractHash(contract)
 
 	for _, c := range cu.manifest.Contracts {
+		// Skip excluded or not onboarded contracts
+		if c.Exclude || !c.Onboarded {
+			continue
+		}
+
 		if c.Name == contract.Name {
 			return c.Hash != hash
 		}
@@ -71,31 +100,43 @@ func (cu *ContractUpdater) contractChanged(contract structs.Contract) bool {
 	return false
 }
 
-func requestVersionUpdate(currVersion string) string {
-	fmt.Printf(
+func (cu *ContractUpdater) contractNotOnboarded(contract structs.Contract) bool {
+	for _, c := range cu.manifest.Contracts {
+		// skip excluded
+		if c.Exclude {
+			continue
+		}
+
+		if !c.Onboarded {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (cu *ContractUpdater) requestVersionUpdate(currVersion string) string {
+	newVersion := cu.logger.GetUserInput(fmt.Sprintf(
 		"Current version is set to \"%s\", enter new version (leave blank to use existing): ",
 		currVersion,
-	)
-
-	var newVersion string
-	fmt.Scanln(&newVersion)
+	))
 
 	var blank string
 	if newVersion == blank {
-		fmt.Printf("\nVersion unchanged, will use %s\n", currVersion)
+		cu.logger.Info(fmt.Sprintf("\nVersion unchanged, will use %s\n", currVersion))
 		return currVersion
 	}
 
 	return newVersion
 }
 
-func (cu *ContractUpdater) updateChangedContracts() {
+func (cu *ContractUpdater) createUpdateTxs() {
 	contracts := cu.contractsToUpdate
 
 	// Build the update transactions
 	for i, contract := range contracts {
 
-		newVersionNum := requestVersionUpdate(contract.Version)
+		newVersionNum := cu.requestVersionUpdate(contract.Version)
 		if newVersionNum != contract.Version {
 			contract.Version = newVersionNum
 			cu.contractsToUpdate[i].Version = contract.Version
@@ -104,39 +145,29 @@ func (cu *ContractUpdater) updateChangedContracts() {
 		cu.buildContractUpdateTx(contract)
 	}
 
-	// Run them all
-	cu.runTransactions()
+}
+
+func (cu *ContractUpdater) createNewContractTxs() {
+	contracts := cu.contractsToUpload
+
+	for _, contract := range contracts {
+		cu.buildNewContractTx(contract)
+	}
+}
+
+func (cu *ContractUpdater) buildNewContractTx(contract structs.Contract) {
+	tx := buildOnboardTx(contract, cu.setup, cu.logger)
+	txData := contractTx{
+		tx:           tx,
+		contractName: contract.Name,
+	}
+
+	cu.transactions = append(cu.transactions, txData)
 }
 
 func (cu *ContractUpdater) buildContractUpdateTx(contract structs.Contract) {
-	input := alsdk.DataWrapper{
-		"version":   contract.Version,
-		"namespace": cu.setup.Namespace,
-		"name":      contract.Name,
-		"contract":  contract.Data,
-	}
-
-	contractId := contract.Id
-
-	txOpts := alsdk.TransactionOpts{
-		StreamID:       cu.setup.Identity,
-		OutputStreamID: alsdk.StreamID(contractId),
-		Contract:       "contract",
-		Namespace:      "default",
-		Entry:          "update",
-		Input:          input,
-		Output:         alsdk.DataWrapper{},
-		Key:            cu.setup.KeyHandler,
-	}
-
-	txHan, _, err := alsdk.BuildTransaction(txOpts)
-	if err != nil {
-		helper.HandleError(err, fmt.Sprintf("Error building contract update transaction for contract %s", contract.Name))
-	}
-
-	tx := txHan.GetTransaction()
-
-	txData := contractUpdateTx{
+	tx := buildUpdateTx(contract, cu.setup, cu.logger)
+	txData := contractTx{
 		tx:           tx,
 		contractName: contract.Name,
 	}
@@ -148,7 +179,7 @@ func (cu *ContractUpdater) runTransactions() {
 	for _, t := range cu.transactions {
 		resp, err := alsdk.Send(t.tx, cu.setup.Conn)
 		if err != nil {
-			helper.HandleALError(err, resp, fmt.Sprintf("Error running update transaction %s", t.contractName))
+			cu.logger.ActiveledgerError(err, resp, fmt.Sprintf("Error running update transaction %s", t.contractName))
 		}
 	}
 }

@@ -18,10 +18,11 @@ type ContractManifest struct {
 }
 
 type ContractMetadata struct {
-	Name    string `json:"name"`
-	ID      string `json:"id"`
-	Path    string `json:"path"`
-	Version string `json:"version"`
-	Exclude bool   `json:"exclude"`
-	Hash    string `json:"hash"`
+	Name      string `json:"name"`
+	ID        string `json:"id"`
+	Path      string `json:"path"`
+	Version   string `json:"version"`
+	Hash      string `json:"hash"`
+	Exclude   bool   `json:"exclude"`
+	Onboarded bool   `json:"onboarded"`
 }

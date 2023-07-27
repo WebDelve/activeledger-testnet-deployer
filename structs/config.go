@@ -7,4 +7,8 @@ type Config struct {
 	ContractManifest  string `json:"contractManifest"`
 	SetupDataSaveFile string `json:"setupDataSaveFile"`
 	TestnetFolder     string `json:"testnetFolder"`
+	LogToFile         bool   `json:"logToFile"`
+	LogFolder         string `json:"logFolder"`
+	VerboseLogging    bool
+	HeadlessMode      bool
 }

@@ -3,13 +3,12 @@ package contracts
 import (
 	"fmt"
 
-	"dynamicledger.com/testnet-deployer/helper"
 	"dynamicledger.com/testnet-deployer/structs"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
 func (ch *ContractHandler) OnboardContracts() {
-	fmt.Println("Onboarding contracts...")
+	ch.Logger.Info("Onboarding contracts...")
 
 	data := []structs.ContractStore{}
 
@@ -24,36 +23,16 @@ func (ch *ContractHandler) OnboardContracts() {
 }
 
 func (ch *ContractHandler) onboardContract(contract structs.Contract) structs.ContractStore {
-	fmt.Printf("\nOnboarding %s contract...\n", contract.Name)
+	ch.Logger.Info(fmt.Sprintf("\nOnboarding %s contract...\n", contract.Name))
 
-	input := alsdk.DataWrapper{
-		"version":   contract.Version,
-		"namespace": ch.Setup.Namespace,
-		"name":      contract.Name,
-		"contract":  contract.Data,
-	}
-
-	txOpts := alsdk.TransactionOpts{
-		StreamID:  ch.Setup.Identity,
-		Contract:  "contract",
-		Namespace: "default",
-		Input:     input,
-		Key:       ch.Setup.KeyHandler,
-	}
-
-	txHan, _, err := alsdk.BuildTransaction(txOpts)
-	if err != nil {
-		helper.HandleError(err, fmt.Sprintf("Error building contract onboard transaction for contract %s", contract.Name))
-	}
-
-	tx := txHan.GetTransaction()
+	tx := buildOnboardTx(contract, ch.Setup, ch.Logger)
 
 	resp, err := alsdk.Send(tx, ch.Setup.Conn)
 	if err != nil {
-		helper.HandleALError(err, resp, fmt.Sprintf("Error running onboarding transaction for contract %s", contract.Name))
+		ch.Logger.ActiveledgerError(err, resp, fmt.Sprintf("Error running onboarding transaction for contract %s", contract.Name))
 	}
 
-	fmt.Printf("%s contract onboarded.\n", contract.Name)
+	ch.Logger.Info(fmt.Sprintf("%s contract onboarded.\n", contract.Name))
 
 	data := structs.ContractStore{
 		Name: contract.Name,
@@ -61,6 +40,7 @@ func (ch *ContractHandler) onboardContract(contract structs.Contract) structs.Co
 	}
 
 	ch.addIDToManifest(contract.Name, data.ID)
+	ch.updateOnboardedStatus(data.ID)
 
 	ch.labelContract(contract, data.ID)
 

@@ -8,7 +8,7 @@ import (
 
 	"dynamicledger.com/testnet-deployer/contracts"
 	"dynamicledger.com/testnet-deployer/files"
-	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/logging"
 	"dynamicledger.com/testnet-deployer/structs"
 
 	alsdk "github.com/activeledger/SDK-Golang/v2"
@@ -18,43 +18,49 @@ type Bootstrapper struct {
 	config       *structs.Config
 	setup        *structs.SetupData
 	contractData []structs.ContractStore
+	logger       *logging.Logger
+	fileHandler  files.FileHandler
 }
 
 func GetBootstrapper(
 	config *structs.Config,
 	setupData *structs.SetupData,
+	logger *logging.Logger,
 ) Bootstrapper {
+
+	fHan := files.GetFileHandler(logger)
 
 	return Bootstrapper{
 		config,
 		setupData,
 		[]structs.ContractStore{},
+		logger,
+		fHan,
 	}
 
 }
 
 func (b *Bootstrapper) Bootstrap() {
-	b.setup.Folder = getFolder(b.config.TestnetFolder)
+	b.setup.Folder = b.getFolder(b.config.TestnetFolder)
 
 	b.createTestnet()
 	b.createIden()
 	b.createNamespace()
 	b.onboardSmartContracts()
 
-	files.SaveSetupData(b.setup, b.contractData, b.config.SetupDataSaveFile)
+	b.fileHandler.SaveSetupData(b.setup, b.contractData, b.config.SetupDataSaveFile)
 
-	fmt.Printf("\n\nBootstrapping complete\n\n")
+	b.logger.Info("\n\nBootstrapping complete\n\n")
 }
 
-func getFolder(configuredFolder string) string {
+func (b *Bootstrapper) getFolder(configuredFolder string) string {
 
-	fmt.Printf(
-		"Input base folder name, leave blank for default (default=%s): ",
-		configuredFolder,
+	folder := b.logger.GetUserInput(
+		fmt.Sprintf(
+			"Input base folder name, leave blank for default (default = %s): ",
+			configuredFolder,
+		),
 	)
-
-	var folder string
-	fmt.Scanln(&folder)
 
 	var blank string
 	if folder == blank {
@@ -67,17 +73,19 @@ func getFolder(configuredFolder string) string {
 	// No error, folder exists, delete it if user agrees
 	if err == nil {
 
-		fmt.Printf("Folder \"%s\" exists, do you want to delete it? (Y/n): ", folder)
-
-		var deleteFolder string
-		fmt.Scanln(&deleteFolder)
+		deleteFolder := b.logger.GetUserInput(
+			fmt.Sprintf(
+				"Folder \"%s\" exists, do you want to delete it? (Y/n): ",
+				folder,
+			),
+		)
 
 		if deleteFolder == blank || deleteFolder == "Y" {
 			if err := os.RemoveAll(folder); err != nil {
-				helper.HandleError(err, "Error removing folder")
+				b.logger.Fatal(err, "Error removing folder")
 			}
 		} else {
-			fmt.Println("Won't delete folder, exiting instead...")
+			b.logger.Info("Won't delete folder, exiting instead...")
 			os.Exit(0)
 		}
 	}
@@ -85,12 +93,12 @@ func getFolder(configuredFolder string) string {
 	// Check if the error is NOT that the folder doesn't exist
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		// Some other error happened, handle it
-		helper.HandleError(err, "Error checking if folder exists")
+		b.logger.Fatal(err, "Error checking if folder exists")
 	}
 
 	// Create folder, we've either deleted it or it never existed
 	if err := os.Mkdir(folder, 0755); err != nil {
-		helper.HandleError(err, "Error creating base folder")
+		b.logger.Fatal(err, "Error creating base folder")
 	}
 
 	return folder
@@ -101,23 +109,23 @@ func (b *Bootstrapper) createTestnet() {
 	cmd := exec.Command("activeledger", "--testnet")
 	cmd.Dir = b.setup.Folder
 
-	fmt.Println("Creating testnet")
+	b.logger.Info("Creating testnet")
 	_, err := cmd.Output()
 	if err != nil {
-		helper.HandleError(err, "Error running activeledger --testnet, is activeledger installed?")
+		b.logger.Fatal(err, "Error running activeledger --testnet, is activeledger installed?")
 	}
-	fmt.Println("Testnet created")
+	b.logger.Info("Testnet created")
 
-	fmt.Println("Leave this process running and start the testnet, navigate to the created folder and run 'node testnet'. When done return here and press enter to continue.")
+	b.logger.Info("\nLeave this process running and start the testnet, navigate to the created folder and run 'node testnet'. When done return here and press enter to continue.")
 	fmt.Scanln()
 }
 
 func (b *Bootstrapper) createIden() {
-	fmt.Println("Creating and onboarding identity...")
+	b.logger.Info("Creating and onboarding identity...")
 
 	keyhandler, err := alsdk.GenerateRSA()
 	if err != nil {
-		helper.HandleError(err, "Error generating RSA key")
+		b.logger.Fatal(err, "Error generating RSA key")
 	}
 
 	b.setup.KeyHandler = keyhandler
@@ -140,14 +148,14 @@ func (b *Bootstrapper) createIden() {
 
 	txHan, _, err := alsdk.BuildTransaction(txOpts)
 	if err != nil {
-		helper.HandleError(err, "Error building onboarding transaction")
+		b.logger.Fatal(err, "Error building onboarding transaction")
 	}
 
 	tx := txHan.GetTransaction()
 
 	resp, err := alsdk.Send(tx, b.setup.Conn)
 	if err != nil {
-		helper.HandleALError(err, resp, "Error sending identity onboarding transaction")
+		b.logger.ActiveledgerError(err, resp, "Error sending identity onboarding transaction")
 	}
 
 	var streamId string
@@ -160,14 +168,14 @@ func (b *Bootstrapper) createIden() {
 
 	var blank string
 	if streamId == blank {
-		helper.HandleError(errors.New("Blank streamID"), "Identity transaction didn't error, but we got no stream ID")
+		b.logger.Fatal(errors.New("Blank streamID"), "Identity transaction didn't error, but we got no stream ID")
 	}
 
 	b.setup.Identity = alsdk.StreamID(streamId)
 }
 
 func (b *Bootstrapper) createNamespace() {
-	fmt.Println("Creating Namespace...")
+	b.logger.Info("Creating Namespace...")
 
 	input := alsdk.DataWrapper{
 		"namespace": b.setup.Namespace,
@@ -183,25 +191,25 @@ func (b *Bootstrapper) createNamespace() {
 
 	txHan, _, err := alsdk.BuildTransaction(txOpts)
 	if err != nil {
-		helper.HandleError(err, "Error building namespace transaction")
+		b.logger.Fatal(err, "Error building namespace transaction")
 	}
 
 	tx := txHan.GetTransaction()
 
 	resp, err := alsdk.Send(tx, b.setup.Conn)
 	if err != nil {
-		helper.HandleALError(err, resp, "Error sending namespace transaction")
+		b.logger.ActiveledgerError(err, resp, "Error sending namespace transaction")
 	}
 
-	fmt.Printf("Namespace '%s' created\n", b.setup.Namespace)
+	b.logger.Info(fmt.Sprintf("Namespace '%s' created\n", b.setup.Namespace))
 }
 
 func (b *Bootstrapper) onboardSmartContracts() {
-	fmt.Println("Onboarding contracts...")
+	b.logger.Info("Onboarding contracts...")
 
-	conHan := contracts.SetupContractHandler(b.config, b.setup)
+	conHan := contracts.SetupContractHandler(b.config, b.setup, b.logger)
 	conHan.OnboardContracts()
 	b.contractData = conHan.GetContractData()
 
-	fmt.Println("Onboarding complete")
+	b.logger.Info("Onboarding complete")
 }

@@ -6,12 +6,22 @@ import (
 	"fmt"
 	"os"
 
-	"dynamicledger.com/testnet-deployer/helper"
+	"dynamicledger.com/testnet-deployer/logging"
 	"dynamicledger.com/testnet-deployer/structs"
 	alsdk "github.com/activeledger/SDK-Golang/v2"
 )
 
-func SaveSetupData(data *structs.SetupData, contractData []structs.ContractStore, path string) {
+type FileHandler struct {
+	logger *logging.Logger
+}
+
+func GetFileHandler(logger *logging.Logger) FileHandler {
+	return FileHandler{
+		logger,
+	}
+}
+
+func (fh *FileHandler) SaveSetupData(data *structs.SetupData, contractData []structs.ContractStore, path string) {
 	prvKey := data.KeyHandler.GetPrivatePEM()
 	pubKey := data.KeyHandler.GetPublicPEM()
 
@@ -43,24 +53,24 @@ func SaveSetupData(data *structs.SetupData, contractData []structs.ContractStore
 
 	bData, err := json.Marshal(toStore)
 	if err != nil {
-		helper.HandleError(err, "Error marshalling data to store")
+		fh.logger.Fatal(err, "Error marshalling data to store")
 	}
 
-	WriteFile(path, bData)
+	fh.WriteFile(path, bData)
 
 }
 
-func ReadSetupData(config *structs.Config) structs.SetupData {
-	bSetup := ReadFile(config.SetupDataSaveFile)
+func (fh *FileHandler) ReadSetupData(config *structs.Config) structs.SetupData {
+	bSetup := fh.ReadFile(config.SetupDataSaveFile)
 
 	var setupStore structs.SetupStore
 	if err := json.Unmarshal(bSetup, &setupStore); err != nil {
-		helper.HandleError(err, "Error unmarshalling setup data")
+		fh.logger.Fatal(err, "Error unmarshalling setup data")
 	}
 
 	keyHan, err := alsdk.SetKey(setupStore.KeyData.PrivatePem, alsdk.RSA)
 	if err != nil {
-		helper.HandleError(err, "Error setting up key handler")
+		fh.logger.Fatal(err, "Error setting up key handler")
 	}
 
 	connection := alsdk.Connection{
@@ -81,17 +91,17 @@ func ReadSetupData(config *structs.Config) structs.SetupData {
 	return setup
 }
 
-func ReadFile(path string) []byte {
+func (fh *FileHandler) ReadFile(path string) []byte {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		helper.HandleError(err, fmt.Sprintf("Error reading file with path %s", path))
+		fh.logger.Fatal(err, fmt.Sprintf("Error reading file with path %s", path))
 	}
 
 	return data
 }
 
-func WriteFile(path string, data []byte) {
+func (fh *FileHandler) WriteFile(path string, data []byte) {
 	if err := os.WriteFile(path, data, 0644); err != nil {
-		helper.HandleError(err, fmt.Sprintf("Error writing data to file \"%s\"\n", path))
+		fh.logger.Fatal(err, fmt.Sprintf("Error writing data to file \"%s\"\n", path))
 	}
 }

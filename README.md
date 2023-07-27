@@ -70,8 +70,12 @@ The name of the manifest and smartcontract folder/path is configurable in the
 There are two flags available when running, if no flags are provided help will
 be shown.
 
-`./deployer -t` - Deploy a testnet
-`./deployer -u` - Update contracts
+`./deployer -t` - Deploy a testnet<br/>
+`./deployer -u` - Update contracts<br/>
+`./deployer -v` - Enables logging to console<br/>
+`./deployer -hl` - Enables headless mode, no logging, and no questions. This
+will overwrite a testnet if used in conjunction with `-t`, it also will use
+whatever version is set in the manifest<br/>
 
 ## Installation
 
@@ -104,9 +108,17 @@ to be in the same local directory.
   "contractDir": "smartcontracts",
   "contractManifest": "contract-manifest.json",
   "setupDataSaveFile": "setup-output.json",
-  "testnetFolder": "sometestnet"
+  "testnetFolder": "sometestnet",
+  "logToFile": true,
+  "logFolder": "logs"
 }
 ```
+
+There are two additional config elements that are set by flags: Verbose logging,
+and Headless mode.
+
+Verbose logging will enable the printing, and writing, of debug messages.<br/>
+Headless mode will not output messages to the console, but will still write to files
 
 ## Manifest
 
@@ -122,6 +134,11 @@ by checking for blank hashes and updating the manifest. It also will update the
 hashes as required. Hashes are used to check if any updates have been made
 to the contracts, if it finds none it won't continue.
 
+The onboarded flag is also set by the software and is used to check if a contract
+has been uploaded to the ledger or not.
+When adding a new contract, make sure to either not include this, or preferably
+include it and make sure it is false.
+
 ### Sample Manifest
 
 ```json
@@ -132,8 +149,9 @@ to the contracts, if it finds none it won't continue.
       "id": "contractstreamid",
       "path": "smartcontracts/contract.ts",
       "version": "0.0.1",
+      "hash": "contractdatahash",
       "exclude": false,
-      "hash": "contractdatahash"
+      "onboarded": false
     }
   ]
 }
@@ -185,9 +203,10 @@ the same struct internally and will likely be removed in future versions.
 
 ## Todo
 
-- When adding a new contract to the manifest, after others have been onboarded 
+- ~~When adding a new contract to the manifest, after others have been onboarded 
 already, needs to onboard that, there should be a flag in manifest that references
-this: `"onboarded": true`
+this: `"onboarded": true`~~
+Added in 2.0.0
 
 - ~~A useful additonal feature would be to allow updating contracts or updating them.
 The software would need to check for the existence of an output file, or perhaps
@@ -211,8 +230,15 @@ Confirms with user before doing so.
 - Check if Activeledger is installed (requires changes in Activeledger first)
 - Ability to attempt to install Activeledger if it isn't installed
 - Check if node/npm is installed
+- Make labelling optional
+- Add automatic version incrementing capability, this will be enabled with a 
+CLI flag (e.g `-iv`) or an option in the config (e.g `"incrementVersion": true`), 
+and will follow a basic schema defined in the config 
+e.g: `"versionIncrement": "-.-.i"` where `i` is the digit to increment
 
 ### [2.0.0] - 2023-07-
+
+#### Added
 
 - Ability to update contracts and upload new ones ~~based on hidden file~~ hash
 in manifest
@@ -220,6 +246,9 @@ in manifest
 if yes delete and recreate it, if no terminate
 - Refactored code into internal packages
 - Added sample json files
+- Create headless mode so this can be used to automate processes
+- ~~Add verbose logging mode~~ Added custom logger which handles this, 
+adds contextual colouring, and enables logging to file
 
 ### [1.0.0] - 2023-06-30
 

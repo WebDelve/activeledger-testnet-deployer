@@ -6,16 +6,16 @@ import (
 	"encoding/json"
 
 	"dynamicledger.com/testnet-deployer/files"
-	"dynamicledger.com/testnet-deployer/helper"
 	"dynamicledger.com/testnet-deployer/structs"
 )
 
 func (ch *ContractHandler) getManifest() {
 	var man structs.ContractManifest
 
-	data := files.ReadFile(ch.Config.ContractManifest)
+	fHan := files.GetFileHandler(ch.Logger)
+	data := fHan.ReadFile(ch.Config.ContractManifest)
 	if err := json.Unmarshal(data, &man); err != nil {
-		helper.HandleError(err, "Error parsing contract manifest file")
+		ch.Logger.Fatal(err, "Error parsing contract manifHan file")
 	}
 
 	ch.Manifest = man
@@ -31,6 +31,16 @@ func (ch *ContractHandler) addIDToManifest(contractName string, ID string) {
 
 	ch.storeManifest()
 
+}
+
+func (ch *ContractHandler) updateOnboardedStatus(ID string) {
+	for i, cMeta := range ch.Manifest.Contracts {
+		if cMeta.ID == ID {
+			ch.Manifest.Contracts[i].Onboarded = true
+		}
+	}
+
+	ch.storeManifest()
 }
 
 func (ch *ContractHandler) updateVersion(ID string, version string) {
@@ -77,10 +87,11 @@ func (ch *ContractHandler) setHashes(missingCheck bool) {
 func (ch *ContractHandler) storeManifest() {
 	bMan, err := json.Marshal(ch.Manifest)
 	if err != nil {
-		helper.HandleError(err, "Error marshalling manifest data")
+		ch.Logger.Fatal(err, "Error marshalling manifest data")
 	}
 
-	files.WriteFile(ch.Config.ContractManifest, bMan)
+	fHan := files.GetFileHandler(ch.Logger)
+	fHan.WriteFile(ch.Config.ContractManifest, bMan)
 }
 
 func getContractHash(contract structs.Contract) string {

@@ -4,5 +4,7 @@
   "contractDir": "smartcontracts",
   "contractManifest": "contract-manifest.json",
   "setupDataSaveFile": "setup-output.json",
-  "testnetFolder": "testnet"
+  "testnetFolder": "testnet",
+  "logToFile": true,
+  "logFolder": "logs"
 }

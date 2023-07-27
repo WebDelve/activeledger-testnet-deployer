@@ -32,7 +32,9 @@ func (ch *ContractHandler) readContract(contractMeta structs.ContractMetadata) s
 	c.Version = contractMeta.Version
 	c.Id = contractMeta.ID
 
-	data := files.ReadFile(contractMeta.Path)
+	fHan := files.GetFileHandler(ch.Logger)
+
+	data := fHan.ReadFile(contractMeta.Path)
 
 	c.Data = b64.StdEncoding.EncodeToString(data)
 
