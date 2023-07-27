@@ -1,9 +1,29 @@
-# Activeledger Testnet Bootstrapper
+<img src="assets/webdelve-logo.png" alt="WebDelve"/>
+
+[WebDelve - Purpose Drive Software](https://webdelve.co)
+
+*** 
+
+<img src="https://github.com/activeledger/activeledger/blob/master/docs/assets/Asset-23.png" alt="Activeledger"/>
+
+This project is built to work with Activeledger
+
+[Activeledger on GitHub]( https://github.com/activeledger/activeledger )
+
+[Activeledger Website](https://activeledger.io)
+
+***
+
+# Activeledger Testnet Bootstrapper & Contract uploader
+![GitHub](https://img.shields.io/github/license/WebDelve/activeledger-testnet-deployer)
+![GitHub go.mod Go version (subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/WebDelve/activeledger-testnet-deployer)
+![GitHub release (with filter)](https://img.shields.io/github/v/release/WebDelve/activeledger-testnet-deployer)
+![GitHub all releases](https://img.shields.io/github/downloads/WebDelve/activeledger-testnet-deployer/total)
 
 The intention for this software is to allow the creation of a testnet setup that
 is rapidly deployable.
 Current processes either require manually sending transactions to the network or
-using Activeledger IDE.
+using [ Activeledger IDE ](https://github.com/activeledger/ide).
 The IDE is helpful, but requires a manual approach and many clicks.
 
 In an environment where you may want to reset the network quickly and frequently
@@ -14,6 +34,16 @@ which may be polluted from development work, and start fresh with minimal effort
 
 Define once, update sometimes, redeploy often.
 
+## Quick links
+[Requirements](#requirements)<br/>
+[Quickstart](#quickstart)<br/>
+[Installation](#installation)<br/>
+[Config](#config)<br/>
+[Manifest](#manifest)<br/>
+[Setup Output](#setup-output)<br/>
+[Todo](#todo)<br/>
+[Changelog](#changelog)
+
 ## Requirements
 
 **NOTE:** Currently this software does not check if Activeledger is installed,
@@ -22,7 +52,7 @@ this is a future feature.
 Activeledger is a Node application, you will need to install Node and
 Activeledger to use this software.
 
-See the documentation [here](https://github.com/activeledger/activeledger)
+See the Activeledger documentation [here](https://github.com/activeledger/activeledger)
 
 You also need to make sure you have the 2 required files and smartcontracts folder.
 Defaults are included in this repo.
@@ -40,6 +70,29 @@ The name of the manifest and smartcontract folder/path is configurable in the
 2. Make sure your smart contracts are in the directory you specified in `config.json`,
    or path in the manifest
 3. Run the deployer: `./deployer` (may require `chmod +x deployer` first)
+
+There are two flags available when running, if no flags are provided help will
+be shown.
+
+`./deployer -t` - Deploy a testnet
+`./deployer -u` - Update contracts
+
+## Installation
+
+You can find the latest release of this software on the releases page 
+[ here ](https://github.com/WebDelve/activeledger-testnet-deployer/releases)
+
+Currently the only build is available for linux, however compilation for other
+operating systems is simple.
+
+### Compiling from source
+
+Requires GoLang to be installed
+
+1. Download this repo
+2. In the root directory run `go build -o deployer` (named whatever you want)
+3. Make executable, Linux and Mac: `chmod +x deployer`
+4. Run it as defined in the quickstart section
 
 ## Config
 
@@ -59,7 +112,7 @@ to be in the same local directory.
 }
 ```
 
-# Manifest
+## Manifest
 
 The manifest file contains a list of the smartcontracts you want to onboard to
 the testnet.
@@ -90,7 +143,7 @@ to the contracts, if it finds none it won't continue.
 }
 ```
 
-# Setup Output
+## Setup Output
 
 Upon initial deployment the deployer will create a `setup-output.json` file
 (or the file name set in `config.json`). This file contains data that you will
@@ -142,9 +195,10 @@ this: `"onboarded": true`
 
 - ~~A useful additonal feature would be to allow updating contracts or updating them.
 The software would need to check for the existence of an output file, or perhaps
-should maintain a hidden file to keep track of things.
+should maintain a hidden file to keep track of things.~~
+Added in 2.0.0
 
-- For this feature it should check the hashes of the contracts to find updated ones,
+- ~~For this feature it should check the hashes of the contracts to find updated ones,
 update those, and upload any new ones.~~
 Added in 2.0.0 - Stores a hash in the manifest
 
@@ -179,3 +233,8 @@ if yes delete and recreate it, if no terminate
 - Runs `activeledger --testnet`
 - Onboards configured identity and namespace
 - Uploads smartcontracts as defined in manifest file
+
+
+## License
+
+[MIT](https://github.com/WebDelve/activeledger-testnet-deployer/blob/master/LICENCE)
