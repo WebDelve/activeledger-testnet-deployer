@@ -194,8 +194,35 @@ func (l *Logger) print(msg string, lv level, err error) {
 	}
 
 	if l.writeToFile {
-		l.writeFile(output)
+		data := cleanLogForFile(output, lv, timestamp)
+		l.writeFile(data)
 	}
+}
+
+func cleanLogForFile(data string, lv level, ts string) string {
+	split := strings.Split(data, "] ")
+
+	levelString := ""
+	switch lv {
+	case FATAL:
+		levelString = "FATAL Error"
+
+	case ERR:
+		levelString = "Error"
+
+	case INFO:
+		levelString = "Info"
+
+	case WARN:
+		levelString = "Warn"
+
+	case DEBUG:
+		levelString = "Debug"
+
+	}
+
+	output := fmt.Sprintf("[%s %s] %s", ts, levelString, split[1])
+	return output
 }
 
 func (l *Logger) writeFile(data string) {
