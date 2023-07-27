@@ -3,7 +3,7 @@
 
 *** 
 
-<img src="https://github.com/activeledger/activeledger/blob/master/docs/assets/Asset-23.png" alt="Activeledger" width="100"/><br/>
+<img src="https://github.com/activeledger/activeledger/blob/master/docs/assets/Asset-23.png" alt="Activeledger" width="250"/><br/>
 This project is built to work with Activeledger<br/>
 [Activeledger on GitHub]( https://github.com/activeledger/activeledger )<br/>
 [Activeledger Website](https://activeledger.io)
